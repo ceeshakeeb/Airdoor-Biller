@@ -4,34 +4,45 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Airdoor Billing System</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<!-- Firebase (Firestore + Storage + Auth) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <style>
   :root {
-    --navy: #0f1b2d;
-    --navy2: #162236;
-    --blue: #1a6bff;
-    --blue-light: #e8f0ff;
-    --gold: #c8922a;
-    --gold-light: #fdf3e3;
-    --white: #ffffff;
-    --gray50: #f8fafc;
-    --gray100: #f1f5f9;
-    --gray200: #e2e8f0;
-    --gray400: #94a3b8;
-    --gray600: #475569;
-    --gray800: #1e293b;
+    /* ── THEME VARIABLES ── */
+    --porcelain: #F4F5F6;
+    --regent-st-blue: #A3CBE5;
+    --san-marino: #3E75A5;
+    --cello: #224366;
+    --big-stone: #15283D;
+
+    /* ── MAPPING TO APP UI ── */
+    --navy: var(--big-stone);         /* Topbar & Primary Accents */
+    --navy2: var(--cello);            /* Secondary Nav / Headers */
+    --blue: var(--san-marino);        /* Primary Buttons / Active States */
+    --blue-light: var(--regent-st-blue); /* Highlights / Badges */
+    
+    --gold: #d4af37;                  /* Airdoor Brand Accent */
+    --gold-light: rgba(212, 175, 55, 0.15);
+    
+    --white: #ffffff;                 /* Cards, Sidebars, Modals */
+    --gray50: var(--porcelain);       /* Main App Background */
+    --gray100: #eef2f6;               /* Inputs, Hover states */
+    --gray200: #d1d5db;               /* Borders, Dividers */
+    --gray400: #9ca3af;               /* Muted icons/text */
+    --gray600: #4b5563;               /* Secondary text */
+    --gray800: var(--big-stone);      /* Primary text (Big Stone) */
+    
     --green: #16a34a;
     --red: #dc2626;
     --radius: 12px;
-    --shadow: 0 4px 24px rgba(0,0,0,0.08);
-    --shadow-lg: 0 8px 48px rgba(0,0,0,0.15);
+    --shadow: 0 4px 24px rgba(21, 40, 61, 0.08); /* Tinted shadow */
+    --shadow-lg: 0 8px 48px rgba(21, 40, 61, 0.15);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -54,7 +65,7 @@
     position: sticky;
     top: 0;
     z-index: 100;
-    box-shadow: 0 2px 16px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 16px rgba(0,0,0,0.2);
   }
   .logo { display: flex; align-items: center; gap: 12px; }
   .logo-icon {
@@ -62,11 +73,10 @@
     background: var(--gold);
     border-radius: 8px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 18px; font-weight: 700; color: white;
+    font-size: 18px; font-weight: 700; color: var(--navy);
     font-family: 'Playfair Display', serif;
   }
   .logo-text { color: white; font-family: 'Playfair Display', serif; font-size: 20px; letter-spacing: 1px; }
-  .logo-sub { color: var(--gold); font-size: 10px; letter-spacing: 3px; text-transform: uppercase; margin-top: 1px; }
   .topbar-actions { display: flex; gap: 10px; align-items: center; }
   .btn {
     padding: 8px 16px;
@@ -75,16 +85,16 @@
     cursor: pointer;
     font-family: 'DM Sans', sans-serif;
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 600;
     transition: all 0.2s;
     display: flex; align-items: center; gap: 6px;
   }
   .btn-ghost { background: rgba(255,255,255,0.1); color: white; }
   .btn-ghost:hover { background: rgba(255,255,255,0.2); }
-  .btn-gold { background: var(--gold); color: white; }
-  .btn-gold:hover { background: #b8821f; transform: translateY(-1px); }
+  .btn-gold { background: var(--gold); color: var(--navy); font-weight: 700; }
+  .btn-gold:hover { background: #e0be4e; transform: translateY(-1px); }
   .btn-blue { background: var(--blue); color: white; }
-  .btn-blue:hover { background: #1558d4; transform: translateY(-1px); }
+  .btn-blue:hover { background: var(--cello); transform: translateY(-1px); }
   .btn-outline { background: transparent; color: var(--gray600); border: 1.5px solid var(--gray200); }
   .btn-outline:hover { border-color: var(--blue); color: var(--blue); }
   .btn-danger { background: var(--red); color: white; }
@@ -104,7 +114,7 @@
     gap: 4px;
     flex-shrink: 0;
   }
-  .sidebar-section { font-size: 10px; font-weight: 600; color: var(--gray400); letter-spacing: 2px; text-transform: uppercase; padding: 12px 12px 6px; }
+  .sidebar-section { font-size: 10px; font-weight: 700; color: var(--gray400); letter-spacing: 2px; text-transform: uppercase; padding: 12px 12px 6px; }
   .nav-item {
     display: flex; align-items: center; gap: 10px;
     padding: 10px 12px;
@@ -113,10 +123,10 @@
     font-size: 14px;
     color: var(--gray600);
     transition: all 0.15s;
-    font-weight: 400;
+    font-weight: 500;
   }
-  .nav-item:hover { background: var(--gray100); color: var(--gray800); }
-  .nav-item.active { background: var(--blue-light); color: var(--blue); font-weight: 600; }
+  .nav-item:hover { background: var(--gray50); color: var(--navy); }
+  .nav-item.active { background: var(--blue-light); color: var(--navy); font-weight: 700; }
   .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
   .badge {
     margin-left: auto;
@@ -136,7 +146,7 @@
   /* ── DASHBOARD ── */
   .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 32px; }
   .stat-card {
-    background: white;
+    background: var(--white);
     border-radius: var(--radius);
     padding: 24px;
     box-shadow: var(--shadow);
@@ -153,17 +163,19 @@
   .stat-card.gold { border-color: var(--gold); }
   .stat-card.green { border-color: var(--green); }
   .stat-card.red { border-color: var(--red); }
-  .stat-label { font-size: 12px; font-weight: 600; color: var(--gray400); text-transform: uppercase; letter-spacing: 1px; }
-  .stat-value { font-size: 28px; font-weight: 700; margin-top: 8px; font-family: 'DM Mono', monospace; }
+  .stat-label { font-size: 12px; font-weight: 700; color: var(--gray400); text-transform: uppercase; letter-spacing: 1px; }
+  .stat-value { font-size: 28px; font-weight: 700; margin-top: 8px; font-family: 'DM Sans', sans-serif; color: var(--navy); }
   .stat-sub { font-size: 12px; color: var(--gray400); margin-top: 4px; }
+
+  .dash-split { display: grid; grid-template-columns: 320px 1fr; gap: 24px; align-items: start; }
 
   /* ── DOCUMENT TABLE ── */
   .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-  .section-title { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--navy); }
-  .table-wrap { background: white; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+  .section-title { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--navy); font-weight: 700; }
+  .table-wrap { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
   table { width: 100%; border-collapse: collapse; }
-  th { background: var(--navy); color: white; padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; letter-spacing: 0.5px; }
-  td { padding: 13px 16px; border-bottom: 1px solid var(--gray100); font-size: 13px; }
+  th { background: var(--navy); color: var(--gold); padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; letter-spacing: 0.5px; }
+  td { padding: 13px 16px; border-bottom: 1px solid var(--gray100); font-size: 13px; color: var(--gray800); }
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: var(--gray50); }
   .doc-type {
@@ -171,23 +183,22 @@
     padding: 3px 10px;
     border-radius: 99px;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: 0.3px;
   }
   .type-tax { background: #dcfce7; color: var(--green); }
-  .type-proforma { background: #dbeafe; color: #1d4ed8; }
+  .type-proforma { background: var(--blue-light); color: var(--navy); }
   .type-quotation { background: var(--gold-light); color: var(--gold); }
-  .amount-cell { font-family: 'DM Mono', monospace; font-weight: 600; }
+  .amount-cell { font-family: 'DM Sans', sans-serif; font-weight: 600; color: var(--navy); }
 
   /* ── FORM AREA ── */
-  .form-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 32px; margin-bottom: 24px; }
-  .form-title { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--navy); margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+  .form-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 32px; margin-bottom: 24px; }
+  .form-title { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--navy); margin-bottom: 24px; display: flex; align-items: center; gap: 10px; font-weight: 700; }
   .form-title span { font-size: 20px; }
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
   .form-group { display: flex; flex-direction: column; gap: 6px; }
   .form-group.full { grid-column: 1 / -1; }
-  label { font-size: 12px; font-weight: 600; color: var(--gray600); letter-spacing: 0.5px; text-transform: uppercase; }
+  label { font-size: 12px; font-weight: 700; color: var(--navy2); letter-spacing: 0.5px; text-transform: uppercase; }
   input, select, textarea {
     padding: 10px 14px;
     border: 1.5px solid var(--gray200);
@@ -195,11 +206,11 @@
     font-family: 'DM Sans', sans-serif;
     font-size: 14px;
     color: var(--gray800);
-    background: white;
+    background: var(--white);
     transition: border-color 0.2s;
     outline: none;
   }
-  input:focus, select:focus, textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(26,107,255,0.1); }
+  input:focus, select:focus, textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-light); }
   textarea { resize: vertical; min-height: 70px; }
 
   /* ── DOC TYPE SELECTOR ── */
@@ -209,7 +220,7 @@
     padding: 14px 20px;
     border-radius: 10px;
     border: 2px solid var(--gray200);
-    background: white;
+    background: var(--white);
     cursor: pointer;
     text-align: center;
     transition: all 0.2s;
@@ -219,7 +230,7 @@
   .type-btn.selected-tax { border-color: var(--green); background: #f0fdf4; }
   .type-btn.selected-tax .type-label { color: var(--green); }
   .type-btn.selected-proforma { border-color: var(--blue); background: var(--blue-light); }
-  .type-btn.selected-proforma .type-label { color: var(--blue); }
+  .type-btn.selected-proforma .type-label { color: var(--navy); }
   .type-btn.selected-quotation { border-color: var(--gold); background: var(--gold-light); }
   .type-btn.selected-quotation .type-label { color: var(--gold); }
   .type-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
@@ -229,97 +240,42 @@
   .items-header { display: grid; grid-template-columns: 40px 1fr 80px 100px 90px 110px 36px; gap: 8px; align-items: center; padding: 10px 0; border-bottom: 2px solid var(--navy); font-size: 11px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: 0.5px; }
   .item-row { display: grid; grid-template-columns: 40px 1fr 80px 100px 90px 110px 36px; gap: 8px; align-items: start; padding: 8px 0; border-bottom: 1px solid var(--gray100); }
   .item-row input { font-size: 13px; padding: 8px 10px; }
-  .item-row .item-num { display: flex; align-items: center; justify-content: center; height: 38px; font-size: 12px; color: var(--gray400); font-weight: 600; }
+  .item-row .item-num { display: flex; align-items: center; justify-content: center; height: 38px; font-size: 12px; color: var(--gray400); font-weight: 700; }
   .item-row .del-btn { display: flex; align-items: center; justify-content: center; height: 38px; cursor: pointer; color: var(--gray400); font-size: 16px; transition: color 0.2s; border: none; background: none; }
   .item-row .del-btn:hover { color: var(--red); }
-  .add-row-btn { margin-top: 12px; display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--blue); font-size: 13px; font-weight: 600; border: 2px dashed var(--blue); border-radius: 8px; padding: 10px 16px; background: transparent; transition: all 0.2s; }
-  .add-row-btn:hover { background: var(--blue-light); }
+  .add-row-btn { margin-top: 12px; display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--blue); font-size: 13px; font-weight: 700; border: 2px dashed var(--blue); border-radius: 8px; padding: 10px 16px; background: transparent; transition: all 0.2s; }
+  .add-row-btn:hover { background: var(--blue-light); color: var(--navy); border-color: var(--navy); }
 
   /* ── TOTALS ── */
   .totals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
-  .totals-box { }
   .totals-table { width: 100%; }
-  .totals-table tr td { padding: 8px 0; font-size: 14px; border: none; }
-  .totals-table tr td:last-child { text-align: right; font-family: 'DM Mono', monospace; font-weight: 600; }
+  .totals-table tr td { padding: 8px 0; font-size: 14px; border: none; color: var(--navy); }
+  .totals-table tr td:last-child { text-align: right; font-family: 'DM Sans', sans-serif; font-weight: 600; }
   .totals-table .total-row td { font-size: 16px; font-weight: 700; color: var(--navy); border-top: 2px solid var(--navy); padding-top: 12px; }
   .totals-table .tax-row td { color: var(--gray600); font-size: 13px; }
-  .bank-box { background: var(--navy); color: white; border-radius: 10px; padding: 20px; }
+  .bank-box { background: var(--navy); color: white; border-radius: 10px; padding: 20px; box-shadow: var(--shadow); }
   .bank-box h4 { font-size: 11px; letter-spacing: 2px; color: var(--gold); text-transform: uppercase; margin-bottom: 12px; }
   .bank-item { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
-  .bank-item span:first-child { color: var(--gray400); }
-  .bank-item span:last-child { font-family: 'DM Mono', monospace; font-weight: 500; }
+  .bank-item span:first-child { color: var(--blue-light); }
+  .bank-item span:last-child { font-family: 'DM Sans', sans-serif; font-weight: 500; }
 
-  /* ── PREVIEW ── */
-  .preview-wrap { background: white; box-shadow: var(--shadow-lg); border-radius: var(--radius); padding: 8px; }
+  /* ── PREVIEW (Clean White for Documents) ── */
+  .preview-wrap { background: var(--white); box-shadow: var(--shadow-lg); border-radius: var(--radius); padding: 8px; }
   #invoice-preview {
     width: 794px;
     min-height: 1000px;
-    background: white;
+    background: #ffffff !important; 
+    color: #15283D !important;      
     padding: 40px 50px;
     position: relative;
     font-family: 'DM Sans', sans-serif;
   }
 
-  .inv-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; }
-  .inv-company h1 { font-family: 'Playfair Display', serif; font-size: 28px; color: var(--navy); letter-spacing: 2px; }
-  .inv-company p { font-size: 11px; color: var(--gray600); line-height: 1.7; max-width: 300px; margin-top: 6px; }
-  .inv-badge {
-    background: var(--navy);
-    color: white;
-    padding: 8px 22px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
-  .inv-badge.proforma { background: var(--blue); }
-  .inv-badge.quotation { background: var(--gold); }
-
-  .inv-divider { height: 3px; background: linear-gradient(90deg, var(--navy), var(--gold)); margin: 18px 0; border-radius: 2px; }
-
-  .inv-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
-  .inv-bill-to { }
-  .inv-bill-to h4 { font-size: 10px; letter-spacing: 2px; font-weight: 700; color: var(--gray400); text-transform: uppercase; margin-bottom: 8px; }
-  .inv-bill-to p { font-size: 12px; line-height: 1.7; }
-  .inv-bill-to strong { font-size: 14px; color: var(--navy); display: block; margin-bottom: 2px; }
-  .inv-details-table { margin-left: auto; min-width: 240px; border-collapse: collapse; }
-  .inv-details-table td { font-size: 12px; padding: 4px 0; }
-  .inv-details-table td:first-child { color: var(--gray400); padding-right: 20px; font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
-  .inv-details-table td:last-child { font-family: 'DM Mono', monospace; font-weight: 600; color: var(--navy); }
-
-  .inv-items { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-  .inv-items thead tr { background: var(--navy); }
-  .inv-items thead th { color: white; padding: 10px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-align: left; }
-  .inv-items thead th:last-child, .inv-items thead th:nth-last-child(2), .inv-items thead th:nth-last-child(3) { text-align: right; }
-  .inv-items tbody tr td { padding: 10px 12px; font-size: 12px; border-bottom: 1px solid var(--gray100); vertical-align: top; }
-  .inv-items tbody tr td:nth-last-child(1), .inv-items tbody tr td:nth-last-child(2), .inv-items tbody tr td:nth-last-child(3) { text-align: right; }
-  .inv-items tfoot tr td { padding: 6px 12px; font-size: 12px; }
-  .inv-items tfoot tr.subtotal td { border-top: 2px solid var(--gray200); font-weight: 600; }
-  .inv-items tfoot tr.grand td { border-top: 3px solid var(--navy); font-weight: 700; font-size: 14px; color: var(--navy); }
-  .inv-items tfoot tr td:last-child { text-align: right; font-family: 'DM Mono', monospace; }
-  .inv-items tfoot tr td:first-child { font-size: 11px; color: var(--gray600); }
-
-  .inv-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 20px; }
-  .inv-bank { }
-  .inv-bank h4 { font-size: 10px; letter-spacing: 2px; font-weight: 700; color: var(--navy); text-transform: uppercase; margin-bottom: 10px; border-bottom: 2px solid var(--navy); padding-bottom: 6px; }
-  .inv-bank table { width: 100%; border-collapse: collapse; }
-  .inv-bank table td { font-size: 11px; padding: 4px 0; }
-  .inv-bank table td:first-child { color: var(--gray400); width: 110px; font-weight: 600; }
-  .inv-bank table td:last-child { font-family: 'DM Mono', monospace; font-size: 11px; }
-  .inv-sign { text-align: right; }
-  .inv-sign h4 { font-size: 10px; letter-spacing: 2px; font-weight: 700; color: var(--navy); text-transform: uppercase; margin-bottom: 40px; }
-  .inv-sign p { font-size: 11px; color: var(--gray600); }
-  .inv-sign strong { font-size: 13px; display: block; color: var(--navy); }
-  .inv-gst-box { background: var(--gray50); border: 1px solid var(--gray200); border-radius: 6px; padding: 10px 14px; margin-top: 16px; }
-  .inv-gst-box h4 { font-size: 10px; letter-spacing: 1px; font-weight: 700; color: var(--gray400); text-transform: uppercase; margin-bottom: 6px; }
-  .inv-gst-box p { font-size: 11px; color: var(--gray600); line-height: 1.6; }
-
   /* ── MODAL ── */
   .modal-overlay {
     display: none;
     position: fixed; inset: 0;
-    background: rgba(15,27,45,0.7);
+    background: rgba(21, 40, 61, 0.7); 
     z-index: 200;
     align-items: center;
     justify-content: center;
@@ -327,19 +283,17 @@
   }
   .modal-overlay.open { display: flex; }
   .modal {
-    background: white;
+    background: var(--white);
     border-radius: 16px;
     padding: 32px;
     width: 90vw;
-    max-width: 560px;
+    max-width: 860px;
     box-shadow: var(--shadow-lg);
     animation: slideUp 0.3s ease;
   }
   @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   .modal h2 { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--navy); margin-bottom: 6px; }
-  .modal p { color: var(--gray600); font-size: 14px; margin-bottom: 24px; }
-  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
-
+  
   /* ── TOAST ── */
   #toast {
     position: fixed; bottom: 24px; right: 24px;
@@ -348,7 +302,7 @@
     padding: 12px 20px;
     border-radius: 10px;
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 600;
     box-shadow: var(--shadow-lg);
     transform: translateY(80px);
     opacity: 0;
@@ -357,80 +311,32 @@
     display: flex; align-items: center; gap: 8px;
   }
   #toast.show { transform: translateY(0); opacity: 1; }
-  #toast.success { background: var(--green); }
+  #toast.success { background: var(--blue); }
   #toast.error { background: var(--red); }
 
   /* ── SETTINGS ── */
-  .settings-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 28px; margin-bottom: 20px; }
+  .settings-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 28px; margin-bottom: 20px; }
   .settings-card h3 { font-size: 16px; font-weight: 700; color: var(--navy); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
   .num-prefix-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
   .input-hint { font-size: 11px; color: var(--gray400); margin-top: 4px; }
-  /* ── RESPONSIVE PREVIEW ── */
   .preview-container { overflow-x: auto; }
-
-  /* ── WORKSITE BOX ── */
-  .inv-worksite { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; padding: 10px 14px; background: var(--gray50); border-radius: 6px; border: 1px solid var(--gray100); }
-  .inv-worksite p { font-size: 11px; color: var(--gray600); }
-  .inv-worksite strong { color: var(--navy); display: block; font-size: 12px; }
 
   .empty-state { text-align: center; padding: 60px 20px; color: var(--gray400); }
   .empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; }
   .empty-state h3 { font-size: 18px; color: var(--gray600); margin-bottom: 8px; }
   .empty-state p { font-size: 14px; }
 
-  /* ── SPACING VARIANTS ── */
-  .spacing-compact { line-height: 1.3; letter-spacing: -0.2px; }
-  .spacing-normal { line-height: 1.5; letter-spacing: 0px; }
-
-  /* ── STATUS BADGES ── */
-  .status-badge {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 99px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-    text-transform: uppercase;
-  }
-  .status-active { background: #dcfce7; color: var(--green); }
-  .status-pending { background: #fef3c7; color: #d97706; }
-  .status-inactive { background: #e5e7eb; color: var(--gray600); }
-  .status-overdue { background: #fee2e2; color: var(--red); }
-
-  /* ── LEDGER / REPORTS TABLE ── */
-  .ledger-table { width: 100%; border-collapse: collapse; }
-  .ledger-table th { background: var(--navy); color: white; padding: 10px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; }
-  .ledger-table td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--gray100); }
-  .ledger-table tbody tr:hover { background: var(--gray50); }
-  .ledger-amount { font-family: 'DM Mono', monospace; font-weight: 600; text-align: right; }
-
-  /* ── MODULE CARDS (Customers, Purchases, etc) ── */
-  .module-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px; }
-  .module-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-  .module-card-title { font-size: 16px; font-weight: 600; color: var(--navy); }
-  .module-card-actions { display: flex; gap: 8px; }
-
-  /* ── MODULE GRID ── */
-  .module-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-  @media (max-width: 1024px) { .module-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 640px) { .module-grid { grid-template-columns: 1fr; } }
-
-  .tab-bar { display: flex; gap: 4px; background: var(--gray100); border-radius: 10px; padding: 4px; margin-bottom: 24px; }
-  .tab-item { flex: 1; padding: 9px 16px; border-radius: 7px; border: none; background: transparent; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; color: var(--gray600); transition: all 0.2s; text-align: center; }
-  .tab-item.active { background: white; color: var(--navy); font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-
-  .number-display { font-family: 'DM Mono', monospace; background: var(--gold-light); border: 1.5px solid var(--gold); color: var(--gold); padding: 6px 14px; border-radius: 6px; font-size: 14px; font-weight: 700; display: inline-block; }
+  .module-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px; }
+  .module-card-title { font-size: 16px; font-weight: 700; color: var(--navy); }
 </style>
 </head>
 <body>
 
-<!-- TOP BAR -->
 <div class="topbar">
   <div class="logo">
     <div class="logo-icon">A</div>
     <div>
-      <div class="logo-text">AIRDOOR</div>
-      <div class="logo-sub">Airconditioning Solutions</div>
+      <div class="logo-text" id="topbar-logo-text">AIRDOOR</div>
     </div>
   </div>
   <div class="topbar-actions">
@@ -440,7 +346,6 @@
 </div>
 
 <div class="app">
-  <!-- SIDEBAR -->
   <div class="sidebar">
     <div class="sidebar-section">Navigation</div>
     <div class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')"><span class="icon">🏠</span> Dashboard</div>
@@ -461,15 +366,13 @@
     <div class="nav-item" data-page="settings" onclick="showPage('settings')"><span class="icon">⚙️</span> Settings</div>
   </div>
 
-  <!-- CONTENT -->
   <div class="content">
 
-    <!-- DASHBOARD -->
     <div class="page active" id="page-dashboard">
       <div class="section-header">
         <div>
           <div class="section-title">Dashboard</div>
-          <div style="color:var(--gray400);font-size:13px;margin-top:4px">Overview of your billing activity</div>
+          <div style="color:var(--gray600);font-size:13px;margin-top:4px">Overview of your billing activity</div>
         </div>
       </div>
       <div class="stat-grid">
@@ -495,23 +398,33 @@
         </div>
       </div>
 
-      <div class="section-header">
-        <div class="section-title">Recent Documents</div>
-        <button class="btn btn-outline" onclick="showPage('list'); filterDocs('all')">View All →</button>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Doc No.</th><th>Type</th><th>Client</th><th>Date</th><th>Amount</th><th>Actions</th></tr>
-          </thead>
-          <tbody id="recent-tbody">
-            <tr><td colspan="6"><div class="empty-state"><div class="empty-icon">📂</div><h3>No documents yet</h3><p>Create your first invoice, proforma, or quotation</p></div></td></tr>
-          </tbody>
-        </table>
+      <div class="dash-split">
+        <div class="table-wrap" style="padding: 24px; display: flex; flex-direction: column;">
+          <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 24px; color: var(--navy);">Document Distribution</h3>
+          <div style="position: relative; flex: 1; min-height: 220px; width: 100%;">
+            <canvas id="docPieChart"></canvas>
+          </div>
+        </div>
+        
+        <div>
+          <div class="section-header" style="margin-top: 0;">
+            <div class="section-title">Recent Documents</div>
+            <button class="btn btn-outline" onclick="showPage('list'); filterDocs('all')">View All →</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Doc No.</th><th>Type</th><th>Client</th><th>Date</th><th>Amount</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="recent-tbody">
+                <tr><td colspan="6"><div class="empty-state"><div class="empty-icon">📂</div><h3>No documents yet</h3><p>Create your first invoice, proforma, or quotation</p></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- NEW DOCUMENT -->
     <div class="page" id="page-new">
       <div class="section-header">
         <div class="section-title">Create New Document</div>
@@ -522,7 +435,6 @@
         </div>
       </div>
 
-      <!-- DOC TYPE -->
       <div class="form-card">
         <div class="form-title"><span>📑</span> Document Type</div>
         <div class="doc-type-selector">
@@ -562,7 +474,6 @@
         </div>
       </div>
 
-      <!-- CLIENT INFO -->
       <div class="form-card">
         <div class="form-title"><span>🏢</span> Client Information</div>
         <div class="form-grid">
@@ -597,7 +508,6 @@
         </div>
       </div>
 
-      <!-- ITEMS -->
       <div class="form-card">
         <div class="form-title"><span>📦</span> Line Items</div>
         <div class="items-section">
@@ -630,7 +540,7 @@
               <tr class="tax-row" id="sgst-row"><td>SGST (9%)</td><td id="t-sgst">₹0.00</td></tr>
               <tr class="tax-row" id="igst-row" style="display:none"><td>IGST (18%)</td><td id="t-igst">₹0.00</td></tr>
               <tr><td>
-                <select id="discount-type" onchange="calcTotals()" style="font-size:12px;padding:4px 8px;margin-right:4px">
+                <select id="discount-type" onchange="calcTotals()" style="font-size:12px;padding:4px 8px;margin-right:4px;background:var(--gray50);color:var(--navy);border:1px solid var(--gray200);">
                   <option value="none">Discount</option>
                   <option value="pct">Discount (%)</option>
                   <option value="flat">Discount (₹)</option>
@@ -651,7 +561,6 @@
       </div>
     </div>
 
-    <!-- LIST PAGE -->
     <div class="page" id="page-list">
       <div class="section-header">
         <div class="section-title" id="list-title">All Documents</div>
@@ -670,7 +579,6 @@
       </div>
     </div>
 
-    <!-- SETTINGS -->
     <div class="page" id="page-settings">
       <div class="section-header">
         <div class="section-title">Settings</div>
@@ -679,7 +587,7 @@
       <div class="settings-card">
         <h3>🏢 Company Information</h3>
         <div class="form-grid">
-          <div class="form-group"><label>Company Name</label><input type="text" id="s-company" value="Airdoor Airconditioning Solutions" /></div>
+          <div class="form-group"><label>Company Name</label><input type="text" id="s-company" value="Airdoor Airconditioning Solutions" onchange="updateMainHeader()"/></div>
           <div class="form-group"><label>GST No. / GSTIN</label><input type="text" id="s-gst" placeholder="Your GST number" style="text-transform:uppercase" /></div>
           <div class="form-group full"><label>Registered Address (Invoice Header)</label><textarea id="s-address" rows="2">First Floor Building No 11/540 GandhiNagar Road Pallilamkara, North Kalamassery. Kalamassery PO. 683503, Ernakulam, Kerala</textarea></div>
           <div class="form-group"><label>Email</label><input type="email" id="s-email" value="Airdoor@outlook.com" /></div>
@@ -690,23 +598,21 @@
       <div class="settings-card">
         <h3>🖼️ Company Logo</h3>
         <div style="display:flex;align-items:flex-start;gap:28px;flex-wrap:wrap">
-          <!-- Preview box -->
-          <div id="logo-preview-box" style="width:180px;height:100px;border:2px dashed var(--gray200);border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--gray50);overflow:hidden;flex-shrink:0;cursor:pointer;position:relative" onclick="document.getElementById('logo-file-input').click()">
+          <div id="logo-preview-box" style="width:180px;height:100px;border:2px dashed var(--gray400);border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--gray50);overflow:hidden;flex-shrink:0;cursor:pointer;position:relative" onclick="document.getElementById('logo-file-input').click()">
             <img id="logo-preview-img" src="" alt="" style="max-width:100%;max-height:100%;object-fit:contain;display:none" />
-            <div id="logo-placeholder" style="text-align:center;color:var(--gray400)">
+            <div id="logo-placeholder" style="text-align:center;color:var(--gray600)">
               <div style="font-size:28px">🖼️</div>
               <div style="font-size:12px;margin-top:6px">Click to upload logo</div>
             </div>
           </div>
-          <!-- Controls -->
           <div style="flex:1;min-width:200px">
-            <div style="font-size:13px;color:var(--gray600);margin-bottom:14px;line-height:1.6">Upload your company logo. It will appear on all invoices, proformas, and quotations. Supports PNG, JPG, SVG — transparent PNG works best.</div>
+            <div style="font-size:13px;color:var(--gray600);margin-bottom:14px;line-height:1.6">Upload your company logo directly to the document data. It will appear on all invoices. Supports PNG, JPG, SVG.</div>
             <input type="file" id="logo-file-input" accept="image/*" style="display:none" onchange="handleLogoUpload(event)" />
             <div style="display:flex;gap:10px;flex-wrap:wrap">
               <button class="btn btn-blue" onclick="document.getElementById('logo-file-input').click()">📁 Choose Image</button>
               <button class="btn btn-outline" onclick="removeLogo()">🗑 Remove Logo</button>
             </div>
-            <div style="margin-top:12px;font-size:12px;color:var(--gray400)">💡 Tip: A white or transparent background logo looks best on invoices. Recommended size: 300×100 px or wider.</div>
+            <div style="margin-top:12px;font-size:12px;color:var(--gray600)">💡 Tip: A transparent background logo works best. File will be encoded as Base64.</div>
           </div>
         </div>
       </div>
@@ -728,17 +634,14 @@
           <div class="form-group">
             <label>Tax Invoice Prefix</label>
             <input type="text" id="s-tax-prefix" value="ADMS/25-26/" />
-            <div class="input-hint">e.g. ADMS/25-26/1, ADMS/25-26/2…</div>
           </div>
           <div class="form-group">
             <label>Proforma Prefix</label>
             <input type="text" id="s-pro-prefix" value="ADM/PRO/25-26/" />
-            <div class="input-hint">e.g. ADM/PRO/25-26/1</div>
           </div>
           <div class="form-group">
             <label>Quotation Prefix</label>
             <input type="text" id="s-quot-prefix" value="ADM/QUT/25-26/" />
-            <div class="input-hint">e.g. ADM/QUT/25-26/1</div>
           </div>
         </div>
         <div class="num-prefix-row" style="margin-top:16px">
@@ -767,14 +670,12 @@
         </div>
       </div>
 
-
       <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:8px">
         <button class="btn btn-outline" onclick="loadSettings()">Reset</button>
         <button class="btn btn-gold" onclick="saveSettings()">💾 Save Settings</button>
       </div>
     </div>
 
-    <!-- PREVIEW PAGE -->
     <div class="page" id="page-preview">
       <div class="section-header">
         <div>
@@ -793,159 +694,23 @@
       </div>
     </div>
 
-    <!-- CUSTOMERS -->
-    <div class="page" id="page-customers">
-      <div class="section-header">
-        <div>
-          <div class="section-title">Customers</div>
-          <div style="color:var(--gray400);font-size:13px;margin-top:4px">Manage customer information and profiles</div>
-        </div>
-        <button class="btn btn-gold" onclick="addCustomer()">＋ New Customer</button>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Name</th><th>GST No.</th><th>City</th><th>Contact</th><th>Status</th><th>Actions</th></tr>
-          </thead>
-          <tbody id="customers-tbody">
-            <tr><td colspan="6"><div class="empty-state"><div class="empty-icon">👥</div><h3>No customers yet</h3><p>Add your first customer to get started</p></div></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- PURCHASES -->
-    <div class="page" id="page-purchases">
-      <div class="section-header">
-        <div>
-          <div class="section-title">Purchases</div>
-          <div style="color:var(--gray400);font-size:13px;margin-top:4px">Track all purchase orders and inventory</div>
-        </div>
-        <button class="btn btn-gold" onclick="addPurchase()">＋ New Purchase</button>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>PO No.</th><th>Supplier</th><th>Date</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
-          </thead>
-          <tbody id="purchases-tbody">
-            <tr><td colspan="6"><div class="empty-state"><div class="empty-icon">📦</div><h3>No purchases yet</h3><p>Create a purchase order to track supplier bills</p></div></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- EXPENSES -->
-    <div class="page" id="page-expenses">
-      <div class="section-header">
-        <div>
-          <div class="section-title">Expenses</div>
-          <div style="color:var(--gray400);font-size:13px;margin-top:4px">Monitor operational and business expenses</div>
-        </div>
-        <button class="btn btn-gold" onclick="addExpense()">＋ New Expense</button>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
-          </thead>
-          <tbody id="expenses-tbody">
-            <tr><td colspan="6"><div class="empty-state"><div class="empty-icon">💸</div><h3>No expenses yet</h3><p>Log your business expenses here</p></div></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- SALARY -->
-    <div class="page" id="page-salary">
-      <div class="section-header">
-        <div>
-          <div class="section-title">Salary Management</div>
-          <div style="color:var(--gray400);font-size:13px;margin-top:4px">Manage employee payroll and salary records</div>
-        </div>
-        <button class="btn btn-gold" onclick="addEmployee()">＋ Add Employee</button>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Employee Name</th><th>Position</th><th>Monthly Salary</th><th>Last Paid</th><th>Status</th><th>Actions</th></tr>
-          </thead>
-          <tbody id="salary-tbody">
-            <tr><td colspan="6"><div class="empty-state"><div class="empty-icon">💼</div><h3>No employees yet</h3><p>Add employee records to manage payroll</p></div></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- PAYMENTS -->
-    <div class="page" id="page-payments">
-      <div class="section-header">
-        <div>
-          <div class="section-title">Payments</div>
-          <div style="color:var(--gray400);font-size:13px;margin-top:4px">Track all incoming and outgoing payments</div>
-        </div>
-        <button class="btn btn-gold" onclick="addPayment()">＋ New Payment</button>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Date</th><th>Type</th><th>Description</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
-          </thead>
-          <tbody id="payments-tbody">
-            <tr><td colspan="6"><div class="empty-state"><div class="empty-icon">💳</div><h3>No payments yet</h3><p>Record payment transactions here</p></div></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- REPORTS -->
-    <div class="page" id="page-reports">
-      <div class="section-header">
-        <div>
-          <div class="section-title">Reports</div>
-          <div style="color:var(--gray400);font-size:13px;margin-top:4px">View financial and operational analytics</div>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:32px">
-        <div class="module-card" onclick="showReportType('invoices')">
-          <div class="module-card-title">🧾 Invoice Report</div>
-          <div style="font-size:13px;color:var(--gray600);margin-top:8px">Summary of all invoices issued</div>
-          <button class="btn btn-outline" style="margin-top:12px;width:100%">View →</button>
-        </div>
-        <div class="module-card" onclick="showReportType('revenue')">
-          <div class="module-card-title">💰 Revenue Report</div>
-          <div style="font-size:13px;color:var(--gray600);margin-top:8px">Total revenue by period</div>
-          <button class="btn btn-outline" style="margin-top:12px;width:100%">View →</button>
-        </div>
-        <div class="module-card" onclick="showReportType('expenses')">
-          <div class="module-card-title">💸 Expense Report</div>
-          <div style="font-size:13px;color:var(--gray600);margin-top:8px">Breakdown of business expenses</div>
-          <button class="btn btn-outline" style="margin-top:12px;width:100%">View →</button>
-        </div>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Report Name</th><th>Type</th><th>Period</th><th>Generated</th><th>Actions</th></tr>
-          </thead>
-          <tbody id="reports-tbody">
-            <tr><td colspan="5"><div class="empty-state"><div class="empty-icon">📊</div><h3>No reports generated yet</h3><p>Select a report type above to generate analytics</p></div></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <div class="page" id="page-customers"><div class="section-header"><div class="section-title">Customers</div></div></div>
+    <div class="page" id="page-purchases"><div class="section-header"><div class="section-title">Purchases</div></div></div>
+    <div class="page" id="page-expenses"><div class="section-header"><div class="section-title">Expenses</div></div></div>
+    <div class="page" id="page-salary"><div class="section-header"><div class="section-title">Salary Management</div></div></div>
+    <div class="page" id="page-payments"><div class="section-header"><div class="section-title">Payments</div></div></div>
+    <div class="page" id="page-reports"><div class="section-header"><div class="section-title">Reports</div></div></div>
 
   </div>
 </div>
 
-<!-- PREVIEW MODAL (view saved doc) -->
 <div class="modal-overlay" id="view-modal">
-  <div class="modal" style="max-width:860px;width:95vw;max-height:90vh;overflow-y:auto">
+  <div class="modal" style="max-height:95vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <h2 id="modal-title">Document</h2>
       <div style="display:flex;gap:8px">
         <button class="btn btn-blue" onclick="downloadSavedPDF()">⬇ PDF</button>
-        <button class="btn btn-ghost" style="color:var(--gray600);border:1.5px solid var(--gray200)" onclick="closeModal()">✕ Close</button>
+        <button class="btn btn-ghost" style="color:var(--gray600);border:1.5px solid var(--gray400)" onclick="closeModal()">✕ Close</button>
       </div>
     </div>
     <div class="preview-container">
@@ -954,7 +719,6 @@
   </div>
 </div>
 
-<!-- TOAST -->
 <div id="toast">✓ Saved!</div>
 
 <script>
@@ -978,13 +742,12 @@ const auth = firebase.auth();
 const DOCS_COLLECTION = 'documents';
 const SETTINGS_REF = db.collection('settings').doc('main');
 
-// ═══════════════════════════════════════════════════════
-// DATA STORE (now backed by Firestore — these stay in sync
-// automatically via the onSnapshot listeners in listenToData())
-// ═══════════════════════════════════════════════════════
+const DEFAULT_AIRDOOR_LOGO = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCAyMDAgNjAiPjxyZWN0IHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgeD0iMCIgeT0iMTAiIHJ4PSI4IiBmaWxsPSIjMTUyODNEIi8+PHRleHQgeD0iMjAiIHk9IjM4IiBmb250LWZhbWlseT0ic2VyaWYiIGZvbnQtc2l6ZT0iMjQiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZDRhZjM3IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5BPC90ZXh0Pjx0ZXh0IHg9IjUwIiB5PSIzOCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjQiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjMTUyODNEIj5BSVJET09SPC90ZXh0Pjwvc3ZnPg==';
+
 let documents = [];
 let settings = {
-  company: 'Airdoor Airconditioning Solutions',
+  logoDataUrl: DEFAULT_AIRDOOR_LOGO,
+  company: 'AIRDOOR',
   gst: '',
   address: 'First Floor Building No 11/540 GandhiNagar Road Pallilamkara, North Kalamassery. Kalamassery PO. 683503, Ernakulam, Kerala',
   email: 'Airdoor@outlook.com',
@@ -1010,74 +773,36 @@ let viewingDocId = null;
 // FIRESTORE SYNC
 // ═══════════════════════════════════════════════════════
 function listenToData() {
-  // Settings — single document at settings/main
   SETTINGS_REF.onSnapshot(snap => {
-    if (snap.exists) {
-      settings = { ...settings, ...snap.data() };
-    } else {
-      // First run for this project — seed Firestore with the defaults above
-      SETTINGS_REF.set(settings).catch(err => console.error('Seed settings failed:', err));
-    }
+    if (snap.exists) { settings = { ...settings, ...snap.data() }; } 
+    else { SETTINGS_REF.set(settings).catch(err => console.error('Seed error:', err)); }
     loadSettings();
     updateBankPreview();
-  }, err => {
-    console.error('Settings sync error:', err);
-    toast('Settings sync failed — check Firestore rules', 'error');
+    updateMainHeader();
   });
 
-  // Documents — collection "documents", newest first
   db.collection(DOCS_COLLECTION).orderBy('createdAt', 'desc').onSnapshot(snap => {
     documents = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     updateBadges();
     updateDashboard();
     renderList();
-  }, err => {
-    console.error('Documents sync error:', err);
-    toast('Document sync failed — check Firestore rules', 'error');
   });
 }
 
-// Sign in anonymously so Firestore security rules can require auth != null.
-// (If your rules are fully open/test-mode this still works fine.)
-auth.onAuthStateChanged(user => {
-  if (user) listenToData();
-});
-auth.signInAnonymously().catch(err => {
-  console.error('Firebase auth error:', err);
-  toast('Firebase connection failed: ' + err.message, 'error');
-});
+auth.onAuthStateChanged(user => { if (user) listenToData(); });
+auth.signInAnonymously().catch(err => console.error(err));
 
-// ═══════════════════════════════════════════════════════
-// PAGE NAVIGATION
-// ═══════════════════════════════════════════════════════
 function showPage(name) {
-  // Hide all pages, show target page
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + name)?.classList.add('active');
-
-  // Clear active state from all nav items
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('[data-page="' + name + '"]').forEach(n => { n.classList.add('active'); });
 
-  // Set active state on nav items matching data-page attribute
-  document.querySelectorAll('[data-page="' + name + '"]').forEach(n => {
-    n.classList.add('active');
-  });
-
-  // Trigger page-specific init functions
   if (name === 'dashboard') updateDashboard();
   if (name === 'list') renderList();
   if (name === 'settings') loadSettings();
-  if (name === 'customers') loadCustomers();
-  if (name === 'purchases') loadPurchases();
-  if (name === 'expenses') loadExpenses();
-  if (name === 'salary') loadSalary();
-  if (name === 'payments') loadPayments();
-  if (name === 'reports') loadReports();
 }
 
-// ═══════════════════════════════════════════════════════
-// DOC TYPE SELECTION
-// ═══════════════════════════════════════════════════════
 function selectType(type) {
   currentDocType = type;
   document.getElementById('type-tax').className = 'type-btn';
@@ -1086,7 +811,6 @@ function selectType(type) {
   if (type === 'Tax Invoice') document.getElementById('type-tax').classList.add('selected-tax');
   if (type === 'Proforma Invoice') document.getElementById('type-proforma').classList.add('selected-proforma');
   if (type === 'Quotation') document.getElementById('type-quotation').classList.add('selected-quotation');
-  // Show/hide tax rows for quotations
   const showTax = type !== 'Quotation';
   document.getElementById('cgst-row').style.display = showTax ? '' : 'none';
   document.getElementById('sgst-row').style.display = showTax ? '' : 'none';
@@ -1094,9 +818,6 @@ function selectType(type) {
   calcTotals();
 }
 
-// ═══════════════════════════════════════════════════════
-// AUTO NUMBER
-// ═══════════════════════════════════════════════════════
 function autoNumber() {
   let num, prefix;
   if (currentDocType === 'Tax Invoice') { prefix = settings.taxPrefix; num = settings.taxNext; }
@@ -1105,9 +826,6 @@ function autoNumber() {
   document.getElementById('doc-number').value = prefix + num;
 }
 
-// ═══════════════════════════════════════════════════════
-// ITEMS
-// ═══════════════════════════════════════════════════════
 function addItem(desc = '', qty = '', unit = 'Lot', rate = '', amt = '') {
   const cont = document.getElementById('items-container');
   const idx = cont.children.length + 1;
@@ -1115,7 +833,7 @@ function addItem(desc = '', qty = '', unit = 'Lot', rate = '', amt = '') {
   row.className = 'item-row';
   row.innerHTML = `
     <div class="item-num">${idx}</div>
-    <input type="text" placeholder="Description of service / goods" value="${desc}" style="grid-column:auto" oninput="" />
+    <input type="text" placeholder="Description of service / goods" value="${desc}" style="grid-column:auto" />
     <input type="number" placeholder="1" value="${qty}" min="0" oninput="recalcRow(this)" />
     <input type="text" placeholder="Lot / Nos / Set" value="${unit}" />
     <input type="number" placeholder="0.00" value="${rate}" min="0" oninput="recalcRow(this)" />
@@ -1137,47 +855,34 @@ function recalcRow(el) {
 
 function removeItem(btn) {
   btn.closest('.item-row').remove();
-  // Re-number
-  document.querySelectorAll('.item-row').forEach((r, i) => {
-    r.querySelector('.item-num').textContent = i + 1;
-  });
+  document.querySelectorAll('.item-row').forEach((r, i) => r.querySelector('.item-num').textContent = i + 1);
   calcTotals();
 }
 
-// ═══════════════════════════════════════════════════════
-// TOTALS CALCULATION
-// ═══════════════════════════════════════════════════════
 function calcTotals() {
   let subtotal = 0;
   document.querySelectorAll('#items-container .item-row').forEach(row => {
-    const inputs = row.querySelectorAll('input');
-    subtotal += parseFloat(inputs[4].value) || 0;
+    subtotal += parseFloat(row.querySelectorAll('input')[4].value) || 0;
   });
 
   const taxType = document.getElementById('tax-type').value;
   const discType = document.getElementById('discount-type').value;
   const discVal = parseFloat(document.getElementById('discount-val').value) || 0;
-
-  let discount = 0;
-  if (discType === 'pct') discount = subtotal * discVal / 100;
-  else if (discType === 'flat') discount = discVal;
-
+  let discount = discType === 'pct' ? subtotal * discVal / 100 : discType === 'flat' ? discVal : 0;
   const taxable = subtotal - discount;
   let cgst = 0, sgst = 0, igst = 0;
 
   if (currentDocType !== 'Quotation') {
-    if (taxType === 'cgst_sgst') { cgst = taxable * 0.09; sgst = taxable * 0.09; }
+    if (taxType === 'cgst_sgst') { cgst = sgst = taxable * 0.09; }
     else if (taxType === 'igst') { igst = taxable * 0.18; }
   }
 
   const grand = taxable + cgst + sgst + igst;
-
   document.getElementById('t-subtotal').textContent = '₹' + subtotal.toFixed(2);
   document.getElementById('t-cgst').textContent = '₹' + cgst.toFixed(2);
   document.getElementById('t-sgst').textContent = '₹' + sgst.toFixed(2);
   document.getElementById('t-igst').textContent = '₹' + igst.toFixed(2);
   document.getElementById('t-grand').textContent = '₹' + grand.toFixed(2);
-
   updateBankPreview();
 }
 
@@ -1196,205 +901,119 @@ function updateBankPreview() {
   document.getElementById('prev-ifsc').textContent = settings.ifsc || '—';
 }
 
-// ═══════════════════════════════════════════════════════
-// COLLECT FORM DATA
-// ═══════════════════════════════════════════════════════
 function collectFormData() {
   const items = [];
   document.querySelectorAll('#items-container .item-row').forEach(row => {
     const inputs = row.querySelectorAll('input');
-    items.push({
-      desc: inputs[0].value,
-      qty: parseFloat(inputs[1].value) || 0,
-      unit: inputs[2].value,
-      rate: parseFloat(inputs[3].value) || 0,
-      amount: parseFloat(inputs[4].value) || 0
-    });
+    items.push({ desc: inputs[0].value, qty: parseFloat(inputs[1].value)||0, unit: inputs[2].value, rate: parseFloat(inputs[3].value)||0, amount: parseFloat(inputs[4].value)||0 });
   });
 
   const subtotal = items.reduce((s, i) => s + i.amount, 0);
   const taxType = document.getElementById('tax-type').value;
   const discType = document.getElementById('discount-type').value;
   const discVal = parseFloat(document.getElementById('discount-val').value) || 0;
-  let discount = 0;
-  if (discType === 'pct') discount = subtotal * discVal / 100;
-  else if (discType === 'flat') discount = discVal;
+  let discount = discType === 'pct' ? subtotal * discVal / 100 : discType === 'flat' ? discVal : 0;
   const taxable = subtotal - discount;
   let cgst = 0, sgst = 0, igst = 0;
   if (currentDocType !== 'Quotation') {
-    if (taxType === 'cgst_sgst') { cgst = taxable * 0.09; sgst = taxable * 0.09; }
-    else if (taxType === 'igst') { igst = taxable * 0.18; }
+    if (taxType === 'cgst_sgst') { cgst = sgst = taxable * 0.09; } else if (taxType === 'igst') { igst = taxable * 0.18; }
   }
   const grand = taxable + cgst + sgst + igst;
 
   return {
-    id: Date.now().toString(),
-    type: currentDocType,
-    number: document.getElementById('doc-number').value,
-    date: document.getElementById('doc-date').value,
-    jobNo: document.getElementById('doc-job').value,
-    poNo: document.getElementById('doc-po').value,
-    clientName: document.getElementById('client-name').value,
-    clientGST: document.getElementById('client-gst').value,
-    clientAddress: document.getElementById('client-address').value,
-    clientCity: document.getElementById('client-city').value,
-    clientContact: document.getElementById('client-contact').value,
-    worksite: document.getElementById('doc-worksite').value,
-    terms: document.getElementById('doc-terms').value,
-    items,
-    subtotal,
-    discount,
-    discType,
-    discVal,
-    taxType,
-    cgst, sgst, igst,
-    grand,
-    settings: { ...settings }
+    id: Date.now().toString(), type: currentDocType, number: document.getElementById('doc-number').value, date: document.getElementById('doc-date').value,
+    jobNo: document.getElementById('doc-job').value, poNo: document.getElementById('doc-po').value, clientName: document.getElementById('client-name').value,
+    clientGST: document.getElementById('client-gst').value, clientAddress: document.getElementById('client-address').value, clientCity: document.getElementById('client-city').value,
+    clientContact: document.getElementById('client-contact').value, worksite: document.getElementById('doc-worksite').value, terms: document.getElementById('doc-terms').value,
+    items, subtotal, discount, discType, discVal, taxType, cgst, sgst, igst, grand, settings: { ...settings }
   };
 }
 
 // ═══════════════════════════════════════════════════════
-// GENERATE INVOICE HTML
+// HTML INVOICE GENERATION (Strict White / Airdoor Accents)
 // ═══════════════════════════════════════════════════════
 function generateInvoiceHTML(doc) {
   const s = doc.settings || settings;
   const fmt = n => '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2 });
-  const badgeClass = doc.type === 'Tax Invoice' ? '' : doc.type === 'Proforma Invoice' ? 'proforma' : 'quotation';
   const dateStr = doc.date ? new Date(doc.date).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : '';
-
+  
   let taxRows = '';
   if (doc.type !== 'Quotation') {
     if (doc.taxType === 'cgst_sgst') {
-      taxRows = `
-        <tr><td colspan="4" style="text-align:right;font-size:11px;color:#475569">CGST @ 9%</td><td style="text-align:right">${fmt(doc.cgst)}</td></tr>
-        <tr><td colspan="4" style="text-align:right;font-size:11px;color:#475569">SGST @ 9%</td><td style="text-align:right">${fmt(doc.sgst)}</td></tr>`;
-    } else if (doc.taxType === 'igst') {
-      taxRows = `<tr><td colspan="4" style="text-align:right;font-size:11px;color:#475569">IGST @ 18%</td><td style="text-align:right">${fmt(doc.igst)}</td></tr>`;
-    }
+      taxRows = `<tr><td style="padding:6px 10px;color:#475569">CGST @ 9%</td><td style="padding:6px 10px;text-align:right">${fmt(doc.cgst)}</td></tr>
+                 <tr><td style="padding:6px 10px;color:#475569">SGST @ 9%</td><td style="padding:6px 10px;text-align:right">${fmt(doc.sgst)}</td></tr>`;
+    } else if (doc.taxType === 'igst') { taxRows = `<tr><td style="padding:6px 10px;color:#475569">IGST @ 18%</td><td style="padding:6px 10px;text-align:right">${fmt(doc.igst)}</td></tr>`; }
   }
-
-  let discRow = '';
-  if (doc.discount > 0) {
-    discRow = `<tr><td colspan="4" style="text-align:right;font-size:11px;color:#dc2626">Discount</td><td style="text-align:right;color:#dc2626">-${fmt(doc.discount)}</td></tr>`;
-  }
-
-  const itemRows = doc.items.map((item, i) => `
-    <tr>
-      <td style="text-align:center;color:#94a3b8">${i+1}</td>
-      <td style="line-height:1.6">${item.desc}</td>
-      <td style="text-align:right">${item.qty}</td>
-      <td style="text-align:center">${item.unit}</td>
-      <td style="text-align:right;font-family:'DM Mono',monospace">${fmt(item.rate)}</td>
-      <td style="text-align:right;font-family:'DM Mono',monospace;font-weight:600">${fmt(item.amount)}</td>
-    </tr>`).join('');
-
+  let discRow = doc.discount > 0 ? `<tr><td style="padding:6px 10px;color:#dc2626">Discount</td><td style="padding:6px 10px;text-align:right;color:#dc2626">-${fmt(doc.discount)}</td></tr>` : '';
+  
+  const itemRows = doc.items.map((item, i) => `<tr><td style="text-align:center;color:#94a3b8">${i+1}</td><td style="line-height:1.6">${item.desc}</td><td style="text-align:right">${item.qty}</td><td style="text-align:center">${item.unit}</td><td style="text-align:right">${fmt(item.rate)}</td><td style="text-align:right;font-weight:600">${fmt(item.amount)}</td></tr>`).join('');
   const gstLine = s.gst ? `<div style="margin-top:4px;font-size:11px;color:#475569"><strong>GST:</strong> ${s.gst}</div>` : '';
-
   const docLabel = doc.type === 'Tax Invoice' ? 'INVOICE' : doc.type === 'Proforma Invoice' ? 'PROFORMA' : 'QUOTATION';
-  const NAVY = '#0f2a5e';
+  const NAVY = '#15283D'; /* Big Stone */
+  const GOLD = '#d4af37';
 
   return `
-    <div style="font-family:'DM Sans',sans-serif;color:#1e293b;width:100%;min-height:900px;position:relative;border:1px solid #e2e8f0;overflow:hidden;display:flex;flex-direction:column">
+    <div style="font-family:'DM Sans',sans-serif;color:#1e293b;background:#ffffff;width:100%;min-height:900px;position:relative;border:1px solid #e2e8f0;overflow:hidden;display:flex;flex-direction:column">
       <div style="display:flex;justify-content:space-between;align-items:stretch;position:relative">
         <div style="padding:24px 24px 12px 24px;display:flex;align-items:center;gap:14px">
-          ${s.logoDataUrl
-            ? `<img src="${s.logoDataUrl}" alt="Logo" style="max-height:60px;max-width:200px;object-fit:contain;display:block" />`
-            : `<div style="width:46px;height:46px;background:${NAVY};border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:white">A</div>
-               <div style="font-size:28px;font-weight:800;color:${NAVY};letter-spacing:1px">airdoor</div>`
-          }
+          ${s.logoDataUrl ? `<img src="${s.logoDataUrl}" alt="Logo" style="max-height:60px;max-width:200px;object-fit:contain;display:block" />` : `<div style="width:46px;height:46px;background:${NAVY};border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:white">A</div><div style="font-size:28px;font-weight:800;color:${NAVY};letter-spacing:1px">airdoor</div>`}
         </div>
-        <div style="background:${NAVY};color:white;padding:24px 36px;display:flex;align-items:center;justify-content:flex-end;min-width:240px;clip-path:polygon(15% 0,100% 0,100% 100%,0% 100%)">
+        <div style="background:${NAVY};color:${GOLD};padding:24px 36px;display:flex;align-items:center;justify-content:flex-end;min-width:240px;clip-path:polygon(15% 0,100% 0,100% 100%,0% 100%)">
           <div style="font-size:28px;font-weight:800;letter-spacing:4px">${docLabel}</div>
         </div>
       </div>
-
       <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 24px 16px 24px;gap:24px">
-        <div style="font-size:11px;color:#475569;line-height:1.9">
-          <div>📍 ${s.address}</div>
-          <div>📞 ${s.phone}</div>
-          <div>✉️ ${s.email}</div>
-          ${gstLine}
-        </div>
+        <div style="font-size:11px;color:#475569;line-height:1.9"><div>📍 ${s.address}</div><div>📞 ${s.phone}</div><div>✉️ ${s.email}</div>${gstLine}</div>
         <div style="border:1px solid #e2e8f0;border-radius:8px;padding:14px 20px;min-width:240px">
-          <table style="width:100%;border-collapse:collapse;font-size:12px">
-            ${doc.number ? `<tr><td style="font-weight:700;color:${NAVY};padding:3px 0">Invoice No.</td><td style="padding:3px 0 3px 12px">:</td><td style="padding:3px 0 3px 8px;font-family:'DM Mono',monospace">${doc.number}</td></tr>` : ''}
-            ${doc.date ? `<tr><td style="font-weight:700;color:${NAVY};padding:3px 0">Invoice Date</td><td style="padding:3px 0 3px 12px">:</td><td style="padding:3px 0 3px 8px">${dateStr}</td></tr>` : ''}
-            ${doc.dueDate ? `<tr><td style="font-weight:700;color:${NAVY};padding:3px 0">Due Date</td><td style="padding:3px 0 3px 12px">:</td><td style="padding:3px 0 3px 8px">${new Date(doc.dueDate).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</td></tr>` : ''}
+          <table style="width:100%;border-collapse:collapse;font-size:12px;color:#1e293b">
+            ${doc.number ? `<tr><td style="font-weight:700;color:${NAVY};padding:3px 0">Invoice No.</td><td style="padding:3px 0 3px 12px">:</td><td style="padding:3px 0 3px 8px;font-weight:600">${doc.number}</td></tr>` : ''}
+            ${doc.date ? `<tr><td style="font-weight:700;color:${NAVY};padding:3px 0">Date</td><td style="padding:3px 0 3px 12px">:</td><td style="padding:3px 0 3px 8px">${dateStr}</td></tr>` : ''}
             ${doc.terms ? `<tr><td style="font-weight:700;color:${NAVY};padding:3px 0">Terms</td><td style="padding:3px 0 3px 12px">:</td><td style="padding:3px 0 3px 8px">${doc.terms}</td></tr>` : ''}
             ${doc.jobNo ? `<tr><td style="font-weight:700;color:${NAVY};padding:3px 0">Job No.</td><td style="padding:3px 0 3px 12px">:</td><td style="padding:3px 0 3px 8px">${doc.jobNo}</td></tr>` : ''}
-            ${doc.poNo ? `<tr><td style="font-weight:700;color:${NAVY};padding:3px 0">PO No.</td><td style="padding:3px 0 3px 12px">:</td><td style="padding:3px 0 3px 8px">${doc.poNo}</td></tr>` : ''}
           </table>
         </div>
       </div>
-
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;border:1px solid #e2e8f0;border-radius:8px;margin:0 24px 16px 24px;padding:16px 20px">
-        <div>
-          <div style="font-size:12px;font-weight:700;color:${NAVY};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Bill To</div>
-          <div style="font-size:13px;font-weight:700;color:${NAVY}">${doc.clientName || '—'}</div>
-          <div style="font-size:12px;color:#475569;line-height:1.7;margin-top:2px">${doc.clientAddress || ''}</div>
-          <div style="font-size:12px;color:#475569">${doc.clientCity || ''}</div>
-          ${doc.clientContact ? `<div style="font-size:12px;color:#475569">Tel.: ${doc.clientContact}</div>` : ''}
-          ${doc.clientGST ? `<div style="font-size:12px;color:#475569;margin-top:4px"><strong>GST:</strong> ${doc.clientGST}</div>` : ''}
-        </div>
-        <div>
-          <div style="font-size:12px;font-weight:700;color:${NAVY};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Ship To</div>
-          <div style="font-size:12px;color:#475569;line-height:1.7">${doc.worksite || doc.clientAddress || ''}</div>
-          <div style="font-size:12px;color:#475569">${doc.clientCity || ''}</div>
-        </div>
+        <div><div style="font-size:12px;font-weight:700;color:${NAVY};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Bill To</div><div style="font-size:13px;font-weight:700;color:${NAVY}">${doc.clientName || '—'}</div><div style="font-size:12px;color:#475569;line-height:1.7;margin-top:2px">${doc.clientAddress || ''}</div><div style="font-size:12px;color:#475569">${doc.clientCity || ''}</div>${doc.clientContact ? `<div style="font-size:12px;color:#475569">Tel.: ${doc.clientContact}</div>` : ''}${doc.clientGST ? `<div style="font-size:12px;color:#475569;margin-top:4px"><strong>GST:</strong> ${doc.clientGST}</div>` : ''}</div>
+        <div><div style="font-size:12px;font-weight:700;color:${NAVY};text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Ship To</div><div style="font-size:12px;color:#475569;line-height:1.7">${doc.worksite || doc.clientAddress || ''}</div><div style="font-size:12px;color:#475569">${doc.clientCity || ''}</div></div>
       </div>
-
-      <table style="width:calc(100% - 48px);margin:0 24px 16px 24px;border-collapse:collapse">
-        <thead>
-          <tr style="background:${NAVY}">
-            <th style="color:white;padding:10px 10px;font-size:11px;font-weight:600;text-align:center;width:36px">#</th>
-            <th style="color:white;padding:10px 10px;font-size:11px;font-weight:600;text-align:left">Description</th>
-            <th style="color:white;padding:10px 10px;font-size:11px;font-weight:600;text-align:right;width:60px">Qty</th>
-            <th style="color:white;padding:10px 10px;font-size:11px;font-weight:600;text-align:center;width:70px">Unit</th>
-            <th style="color:white;padding:10px 10px;font-size:11px;font-weight:600;text-align:right;width:100px">Unit Price</th>
-            <th style="color:white;padding:10px 10px;font-size:11px;font-weight:600;text-align:right;width:110px">Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${itemRows}
-        </tbody>
+      <table style="width:calc(100% - 48px);margin:0 24px 16px 24px;border-collapse:collapse;color:#1e293b">
+        <thead><tr style="background:${NAVY}"><th style="color:${GOLD};padding:10px;font-size:11px;font-weight:700;text-align:center;width:36px">#</th><th style="color:${GOLD};padding:10px;font-size:11px;font-weight:700;text-align:left">Description</th><th style="color:${GOLD};padding:10px;font-size:11px;font-weight:700;text-align:right;width:60px">Qty</th><th style="color:${GOLD};padding:10px;font-size:11px;font-weight:700;text-align:center;width:70px">Unit</th><th style="color:${GOLD};padding:10px;font-size:11px;font-weight:700;text-align:right;width:100px">Unit Price</th><th style="color:${GOLD};padding:10px;font-size:11px;font-weight:700;text-align:right;width:110px">Amount</th></tr></thead>
+        <tbody>${itemRows}</tbody>
       </table>
-
-      <div style="display:grid;grid-template-columns:1.1fr 0.9fr;gap:24px;margin:0 24px 16px 24px;align-items:start">
-        <div style="border:1px solid #e2e8f0;border-radius:8px;padding:16px 20px">
-          <div style="font-size:12px;font-weight:700;color:${NAVY};text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Payment Information</div>
-          <table style="width:100%;border-collapse:collapse;font-size:12px">
-            <tr><td style="font-weight:600;color:#475569;padding:3px 0;width:100px">Bank Name</td><td style="padding:3px 8px">:</td><td style="padding:3px 0;font-family:'DM Mono',monospace">${s.bank}</td></tr>
-            <tr><td style="font-weight:600;color:#475569;padding:3px 0">A/C Name</td><td style="padding:3px 8px">:</td><td style="padding:3px 0;font-family:'DM Mono',monospace">${s.accName}</td></tr>
-            <tr><td style="font-weight:600;color:#475569;padding:3px 0">A/C No.</td><td style="padding:3px 8px">:</td><td style="padding:3px 0;font-family:'DM Mono',monospace">${s.accNum}</td></tr>
-            <tr><td style="font-weight:600;color:#475569;padding:3px 0">IFSC Code</td><td style="padding:3px 8px">:</td><td style="padding:3px 0;font-family:'DM Mono',monospace;font-weight:700">${s.ifsc}</td></tr>
-            <tr><td style="font-weight:600;color:#475569;padding:3px 0">Branch</td><td style="padding:3px 8px">:</td><td style="padding:3px 0;font-family:'DM Mono',monospace">${s.branch}</td></tr>
-          </table>
-        </div>
-        <div>
-          <table style="width:100%;border-collapse:collapse;font-size:13px">
-            <tr><td style="padding:8px 10px;color:#475569">Subtotal</td><td style="padding:8px 10px;text-align:right;font-family:'DM Mono',monospace;font-weight:700">${fmt(doc.subtotal)}</td></tr>
-            ${discRow}
-            ${taxRows}
-          </table>
-          <div style="background:${NAVY};color:white;display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-radius:6px;margin-top:8px">
-            <div style="font-size:16px;font-weight:800;letter-spacing:1px">TOTAL</div>
-            <div style="font-size:18px;font-weight:800;font-family:'DM Mono',monospace">${fmt(doc.grand)}</div>
+      
+      <div style="flex:1; display:grid; grid-template-columns:1fr 1fr; gap:24px; margin:0 24px 24px 24px; align-items:start;">
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div style="border:1px solid #e2e8f0;border-radius:8px;padding:16px 20px">
+            <div style="font-size:12px;font-weight:700;color:${NAVY};text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Payment Information</div>
+            <table style="width:100%;border-collapse:collapse;font-size:12px;color:#1e293b">
+              <tr><td style="font-weight:600;color:#475569;padding:3px 0;width:100px">Bank Name</td><td style="padding:3px 8px">:</td><td style="padding:3px 0;">${s.bank}</td></tr>
+              <tr><td style="font-weight:600;color:#475569;padding:3px 0">A/C Name</td><td style="padding:3px 8px">:</td><td style="padding:3px 0;">${s.accName}</td></tr>
+              <tr><td style="font-weight:600;color:#475569;padding:3px 0">A/C No.</td><td style="padding:3px 8px">:</td><td style="padding:3px 0;">${s.accNum}</td></tr>
+              <tr><td style="font-weight:600;color:#475569;padding:3px 0">IFSC Code</td><td style="padding:3px 8px">:</td><td style="padding:3px 0;font-weight:700">${s.ifsc}</td></tr>
+              <tr><td style="font-weight:600;color:#475569;padding:3px 0">Branch</td><td style="padding:3px 8px">:</td><td style="padding:3px 0;">${s.branch}</td></tr>
+            </table>
+          </div>
+          <div style="border:1px solid #e2e8f0;border-radius:8px;padding:14px 18px;">
+            <div style="font-size:12px;font-weight:700;color:${NAVY};text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Notes</div>
+            <div style="font-size:11px;color:#475569;line-height:1.8">▶ Please make payment within ${doc.terms || '15 days'} of the invoice date.<br>▶ Late payment may attract additional charges.<br>▶ Thank you for your business!</div>
           </div>
         </div>
-      </div>
 
-      <div style="flex:1">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin:0 24px 24px 24px;gap:24px">
-          <div style="border:1px solid #e2e8f0;border-radius:8px;padding:14px 18px;flex:1">
-            <div style="font-size:12px;font-weight:700;color:${NAVY};text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Notes</div>
-            <div style="font-size:11px;color:#475569;line-height:1.8">
-              ▶ Please make payment within ${doc.terms || '15 days'} of the invoice date.<br>
-              ▶ Late payment may attract additional charges.<br>
-              ▶ Thank you for your business!
+        <div style="display:flex; flex-direction:column; justify-content:space-between; height:100%;">
+          <div>
+            <table style="width:100%;border-collapse:collapse;font-size:13px;color:#1e293b">
+              <tr><td style="padding:8px 10px;color:#475569">Subtotal</td><td style="padding:8px 10px;text-align:right;font-weight:700">${fmt(doc.subtotal)}</td></tr>
+              ${discRow}${taxRows}
+            </table>
+            <div style="background:${NAVY};color:${GOLD};display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-radius:6px;margin-top:8px">
+              <div style="font-size:16px;font-weight:800;letter-spacing:1px">TOTAL</div>
+              <div style="font-size:18px;font-weight:800;">${fmt(doc.grand)}</div>
             </div>
           </div>
-          <div style="text-align:right;min-width:140px;padding-top:8px">
-            <div style="border-top:1.5px solid ${NAVY};padding-top:8px;margin-top:50px">
+          
+          <div style="text-align:right;min-width:140px;padding-top:40px;">
+            <div style="border-top:1.5px solid ${NAVY};padding-top:8px;display:inline-block;min-width:200px;">
               <div style="font-size:12px;font-weight:700;color:${NAVY}">${s.company}</div>
               <div style="font-size:11px;color:#475569">Authorised Signatory</div>
             </div>
@@ -1402,36 +1021,27 @@ function generateInvoiceHTML(doc) {
         </div>
       </div>
 
-      <div style="background:${NAVY};color:white;text-align:center;padding:11px;font-size:14px;font-weight:600;clip-path:polygon(0 0,100% 15%,100% 100%,0 100%)">
-        Thank you for your business!
-      </div>
+      <div style="background:${NAVY};color:${GOLD};text-align:center;padding:11px;font-size:14px;font-weight:600;clip-path:polygon(0 0,100% 15%,100% 100%,0 100%)">Thank you for your business!</div>
     </div>`;
 }
 
-// ═══════════════════════════════════════════════════════
-// PREVIEW
-// ═══════════════════════════════════════════════════════
 function previewDoc() {
   const doc = collectFormData();
   document.getElementById('invoice-preview').innerHTML = generateInvoiceHTML(doc);
   showPage('preview');
 }
 
-// ═══════════════════════════════════════════════════════
-// SAVE DOCUMENT
-// ═══════════════════════════════════════════════════════
 function saveDoc() {
   const doc = collectFormData();
   if (!doc.clientName) { toast('Please enter client name', 'error'); return; }
   if (!doc.number) { autoNumber(); doc.number = document.getElementById('doc-number').value; }
   if (doc.items.length === 0) { toast('Add at least one line item', 'error'); return; }
 
-  delete doc.id; // Firestore assigns its own document id
+  delete doc.id;
   doc.createdAt = firebase.firestore.FieldValue.serverTimestamp();
 
   db.collection(DOCS_COLLECTION).add(doc)
     .then(() => {
-      // Increment the relevant counter in Firestore settings
       const updates = {};
       if (doc.type === 'Tax Invoice') updates.taxNext = (settings.taxNext || 1) + 1;
       else if (doc.type === 'Proforma Invoice') updates.proNext = (settings.proNext || 1) + 1;
@@ -1443,14 +1053,11 @@ function saveDoc() {
       showPage('list');
       filterDocs('all');
     })
-    .catch(err => {
-      console.error(err);
-      toast('Save failed: ' + err.message, 'error');
-    });
+    .catch(err => toast('Save failed: ' + err.message, 'error'));
 }
 
 // ═══════════════════════════════════════════════════════
-// DASHBOARD
+// DASHBOARD & CHART
 // ═══════════════════════════════════════════════════════
 function updateDashboard() {
   const tax = documents.filter(d => d.type === 'Tax Invoice');
@@ -1465,6 +1072,33 @@ function updateDashboard() {
 
   updateBadges();
   renderRecentTable();
+
+  const counts = [tax.length, pro.length, quot.length];
+  if (window.docPieChartInst) {
+    window.docPieChartInst.data.datasets[0].data = counts;
+    window.docPieChartInst.update();
+  } else {
+    const ctx = document.getElementById('docPieChart').getContext('2d');
+    window.docPieChartInst = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Tax Invoices', 'Proforma', 'Quotations'],
+        datasets: [{
+          data: counts,
+          backgroundColor: ['#3E75A5', '#224366', '#A3CBE5'],
+          borderColor: '#ffffff',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { color: '#15283D', padding: 15, font: {family: "'DM Sans', sans-serif", weight: 500} } }
+        }
+      }
+    });
+  }
 }
 
 function updateBadges() {
@@ -1484,9 +1118,6 @@ function renderRecentTable() {
   tbody.innerHTML = recent.map(doc => docRow(doc)).join('');
 }
 
-// ═══════════════════════════════════════════════════════
-// LIST
-// ═══════════════════════════════════════════════════════
 function filterDocs(type) {
   currentFilter = type;
   const titles = { all: 'All Documents', 'Tax Invoice': 'Tax Invoices', 'Proforma Invoice': 'Proforma Invoices', 'Quotation': 'Quotations' };
@@ -1498,12 +1129,7 @@ function renderList() {
   const q = (document.getElementById('search-box')?.value || '').toLowerCase();
   let filtered = documents;
   if (currentFilter !== 'all') filtered = filtered.filter(d => d.type === currentFilter);
-  if (q) filtered = filtered.filter(d =>
-    (d.clientName||'').toLowerCase().includes(q) ||
-    (d.number||'').toLowerCase().includes(q) ||
-    (d.worksite||'').toLowerCase().includes(q)
-  );
-
+  if (q) filtered = filtered.filter(d => (d.clientName||'').toLowerCase().includes(q) || (d.number||'').toLowerCase().includes(q) || (d.worksite||'').toLowerCase().includes(q));
   const tbody = document.getElementById('list-tbody');
   if (filtered.length === 0) {
     tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📂</div><h3>No documents found</h3><p>Try a different filter or create a new document</p></div></td></tr>';
@@ -1515,26 +1141,9 @@ function renderList() {
 function docRow(doc, showWorksite = false) {
   const typeClass = doc.type === 'Tax Invoice' ? 'type-tax' : doc.type === 'Proforma Invoice' ? 'type-proforma' : 'type-quotation';
   const dateStr = doc.date ? new Date(doc.date).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : '—';
-  return `<tr>
-    <td><span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:600">${doc.number || '—'}</span></td>
-    <td><span class="doc-type ${typeClass}">${doc.type}</span></td>
-    <td style="font-weight:500">${doc.clientName || '—'}</td>
-    ${showWorksite ? `<td style="font-size:12px;color:var(--gray600)">${doc.worksite || '—'}</td>` : ''}
-    <td style="font-size:12px;color:var(--gray600)">${dateStr}</td>
-    <td class="amount-cell">₹${Number(doc.grand||0).toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
-    <td>
-      <div style="display:flex;gap:6px">
-        <button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="viewDoc('${doc.id}')">👁 View</button>
-        <button class="btn btn-blue" style="padding:5px 10px;font-size:12px" onclick="downloadDocPDF('${doc.id}')">⬇ PDF</button>
-        <button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deleteDoc('${doc.id}')">🗑</button>
-      </div>
-    </td>
-  </tr>`;
+  return `<tr><td><span style="font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600">${doc.number || '—'}</span></td><td><span class="doc-type ${typeClass}">${doc.type}</span></td><td style="font-weight:700; color:var(--navy);">${doc.clientName || '—'}</td>${showWorksite ? `<td style="font-size:12px;color:var(--gray600)">${doc.worksite || '—'}</td>` : ''}<td style="font-size:12px;color:var(--gray600)">${dateStr}</td><td class="amount-cell">₹${Number(doc.grand||0).toLocaleString('en-IN', {minimumFractionDigits:2})}</td><td><div style="display:flex;gap:6px"><button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="viewDoc('${doc.id}')">👁 View</button><button class="btn btn-blue" style="padding:5px 10px;font-size:12px" onclick="downloadDocPDF('${doc.id}')">⬇ PDF</button><button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deleteDoc('${doc.id}')">🗑</button></div></td></tr>`;
 }
 
-// ═══════════════════════════════════════════════════════
-// VIEW / DELETE
-// ═══════════════════════════════════════════════════════
 function viewDoc(id) {
   const doc = documents.find(d => d.id === id);
   if (!doc) return;
@@ -1544,19 +1153,11 @@ function viewDoc(id) {
   document.getElementById('view-modal').classList.add('open');
 }
 
-function closeModal() {
-  document.getElementById('view-modal').classList.remove('open');
-  viewingDocId = null;
-}
+function closeModal() { document.getElementById('view-modal').classList.remove('open'); viewingDocId = null; }
 
 function deleteDoc(id) {
   if (!confirm('Delete this document? This cannot be undone.')) return;
-  db.collection(DOCS_COLLECTION).doc(id).delete()
-    .then(() => toast('Document deleted', 'error'))
-    .catch(err => {
-      console.error(err);
-      toast('Delete failed: ' + err.message, 'error');
-    });
+  db.collection(DOCS_COLLECTION).doc(id).delete().then(() => toast('Document deleted', 'error')).catch(err => toast('Delete failed: ' + err.message, 'error'));
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1570,29 +1171,23 @@ async function renderToPDF(el, fname) {
   const pageH = pdf.internal.pageSize.getHeight();
   const imgW = canvas.width;
   const imgH = canvas.height;
-  const scale = (pageW / imgW) * (canvas.width / canvas.width); // px per mm
   const mmPerPx = pageW / imgW;
   const totalHeightMM = imgH * mmPerPx;
 
   if (totalHeightMM <= pageH) {
-    // Single page
     pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pageW, totalHeightMM);
   } else {
-    // Multipage: slice canvas into A4-height chunks
     const sliceHeightPx = Math.floor(pageH / mmPerPx);
-    let offsetPx = 0;
-    let firstPage = true;
+    let offsetPx = 0, firstPage = true;
     while (offsetPx < imgH) {
       const sliceH = Math.min(sliceHeightPx, imgH - offsetPx);
       const sliceCanvas = document.createElement('canvas');
-      sliceCanvas.width = imgW;
-      sliceCanvas.height = sliceH;
+      sliceCanvas.width = imgW; sliceCanvas.height = sliceH;
       const ctx = sliceCanvas.getContext('2d');
       ctx.drawImage(canvas, 0, offsetPx, imgW, sliceH, 0, 0, imgW, sliceH);
       if (!firstPage) pdf.addPage();
       pdf.addImage(sliceCanvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pageW, sliceH * mmPerPx);
-      offsetPx += sliceH;
-      firstPage = false;
+      offsetPx += sliceH; firstPage = false;
     }
   }
   pdf.save(fname + '.pdf');
@@ -1610,7 +1205,6 @@ async function downloadDocPDF(id) {
   const doc = documents.find(d => d.id === id);
   if (!doc) return;
   viewingDocId = id;
-  // Render into hidden temp div for PDF capture
   let tempDiv = document.getElementById('_pdf_temp');
   if (!tempDiv) {
     tempDiv = document.createElement('div');
@@ -1625,26 +1219,17 @@ async function downloadDocPDF(id) {
   await renderToPDF(tempDiv.firstElementChild, fname);
   toast('PDF downloaded! ✓', 'success');
 }
-
-async function downloadSavedPDF() {
-  if (!viewingDocId) return;
-  await downloadDocPDF(viewingDocId);
-}
+async function downloadSavedPDF() { if (viewingDocId) await downloadDocPDF(viewingDocId); }
 
 // ═══════════════════════════════════════════════════════
-// LOCAL BACKUP / RESTORE
+// BACKUP & SETTINGS
 // ═══════════════════════════════════════════════════════
 function downloadBackupJSON() {
   const payload = JSON.stringify({ exportedAt: new Date().toISOString(), documents, settings }, null, 2);
   const blob = new Blob([payload], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'airdoor_backup_' + new Date().toISOString().slice(0,10) + '.json';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  const a = document.createElement('a'); a.href = url; a.download = 'airdoor_backup_' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
   toast('Backup downloaded! ✓', 'success');
 }
 
@@ -1656,43 +1241,31 @@ function restoreFromJSON(e) {
     try {
       const data = JSON.parse(ev.target.result);
       if (!Array.isArray(data.documents)) { toast('Invalid backup file', 'error'); return; }
-      if (!confirm('This will overwrite your current Firestore documents and settings with the backup (exported ' + (data.exportedAt ? new Date(data.exportedAt).toLocaleString() : 'unknown') + '). Continue?')) return;
-
+      if (!confirm('This will overwrite current settings and documents. Continue?')) return;
       toast('Restoring from backup…', '');
-
-      // Wipe existing documents in Firestore
       const existing = await db.collection(DOCS_COLLECTION).get();
       await Promise.all(existing.docs.map(d => d.ref.delete()));
-
-      // Re-add documents from the backup
       await Promise.all(data.documents.map(d => {
-        const { id, ...rest } = d;
-        rest.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+        const { id, ...rest } = d; rest.createdAt = firebase.firestore.FieldValue.serverTimestamp();
         return db.collection(DOCS_COLLECTION).add(rest);
       }));
-
-      // Restore settings
-      if (data.settings) {
-        await SETTINGS_REF.set(data.settings);
-      }
-
+      if (data.settings) await SETTINGS_REF.set(data.settings);
       toast('Restored successfully! ✓', 'success');
       filterDocs('all');
-    } catch(err) {
-      console.error(err);
-      toast('Failed to restore backup: ' + err.message, 'error');
-    }
+    } catch(err) { toast('Restore failed: ' + err.message, 'error'); }
   };
-  reader.readAsText(file);
-  e.target.value = '';
+  reader.readAsText(file); e.target.value = '';
 }
 
+function updateMainHeader() {
+  const companyNameInput = document.getElementById('s-company');
+  const topbarText = document.getElementById('topbar-logo-text');
+  if(companyNameInput && topbarText) {
+    topbarText.textContent = companyNameInput.value || 'AIRDOOR';
+  }
+}
 
-// ═══════════════════════════════════════════════════════
-// SETTINGS
-// ═══════════════════════════════════════════════════════
 function loadSettings() {
-  // Logo
   if (settings.logoDataUrl) {
     document.getElementById('logo-preview-img').src = settings.logoDataUrl;
     document.getElementById('logo-preview-img').style.display = 'block';
@@ -1717,144 +1290,63 @@ function loadSettings() {
   document.getElementById('s-tax-next').value = settings.taxNext || 1;
   document.getElementById('s-pro-next').value = settings.proNext || 1;
   document.getElementById('s-quot-next').value = settings.quotNext || 1;
+  
+  updateMainHeader();
 }
 
-// ═══════════════════════════════════════════════════════
-// LOGO UPLOAD
-// ═══════════════════════════════════════════════════════
 function handleLogoUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
   if (file.size > 2 * 1024 * 1024) { toast('Image too large (max 2MB)', 'error'); return; }
-
-  toast('Uploading logo…', '');
-  const ref = storage.ref('logos/logo_' + Date.now() + '_' + file.name);
-  ref.put(file)
-    .then(snapshot => snapshot.ref.getDownloadURL())
-    .then(url => SETTINGS_REF.set({ logoDataUrl: url }, { merge: true }))
-    .then(() => {
-      // settings.logoDataUrl & the preview <img> get updated automatically
-      // via the settings onSnapshot listener -> loadSettings()
-      toast('Logo saved! ✓', 'success');
-    })
-    .catch(err => {
-      console.error(err);
-      toast('Logo upload failed: ' + err.message, 'error');
-    });
+  
+  toast('Processing logo...', '');
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    const base64String = event.target.result;
+    SETTINGS_REF.set({ logoDataUrl: base64String }, { merge: true })
+      .then(() => toast('Logo saved! ✓', 'success'))
+      .catch(err => toast('Upload failed: ' + err.message, 'error'));
+  };
+  reader.readAsDataURL(file);
 }
 
 function removeLogo() {
-  SETTINGS_REF.set({ logoDataUrl: '' }, { merge: true })
-    .then(() => {
-      document.getElementById('logo-file-input').value = '';
-      toast('Logo removed');
-    })
-    .catch(err => {
-      console.error(err);
-      toast('Failed to remove logo: ' + err.message, 'error');
-    });
+  SETTINGS_REF.set({ logoDataUrl: '' }, { merge: true }).then(() => {
+    document.getElementById('logo-file-input').value = ''; toast('Logo removed');
+  });
 }
 
 function saveSettings() {
   const updated = {
-    company: document.getElementById('s-company').value,
-    gst: document.getElementById('s-gst').value.toUpperCase(),
-    address: document.getElementById('s-address').value,
-    email: document.getElementById('s-email').value,
-    phone: document.getElementById('s-phone').value,
-    accName: document.getElementById('s-acc-name').value,
-    accNum: document.getElementById('s-acc-num').value,
-    bank: document.getElementById('s-bank').value,
-    branch: document.getElementById('s-branch').value,
-    ifsc: document.getElementById('s-ifsc').value,
-    taxPrefix: document.getElementById('s-tax-prefix').value,
-    proPrefix: document.getElementById('s-pro-prefix').value,
-    quotPrefix: document.getElementById('s-quot-prefix').value,
-    taxNext: parseInt(document.getElementById('s-tax-next').value) || 1,
-    proNext: parseInt(document.getElementById('s-pro-next').value) || 1,
-    quotNext: parseInt(document.getElementById('s-quot-next').value) || 1
+    company: document.getElementById('s-company').value, gst: document.getElementById('s-gst').value.toUpperCase(),
+    address: document.getElementById('s-address').value, email: document.getElementById('s-email').value, phone: document.getElementById('s-phone').value,
+    accName: document.getElementById('s-acc-name').value, accNum: document.getElementById('s-acc-num').value, bank: document.getElementById('s-bank').value,
+    branch: document.getElementById('s-branch').value, ifsc: document.getElementById('s-ifsc').value, taxPrefix: document.getElementById('s-tax-prefix').value,
+    proPrefix: document.getElementById('s-pro-prefix').value, quotPrefix: document.getElementById('s-quot-prefix').value,
+    taxNext: parseInt(document.getElementById('s-tax-next').value) || 1, proNext: parseInt(document.getElementById('s-pro-next').value) || 1, quotNext: parseInt(document.getElementById('s-quot-next').value) || 1
   };
-  SETTINGS_REF.set(updated, { merge: true })
-    .then(() => {
-      updateBankPreview();
-      toast('Settings saved! ✓', 'success');
-    })
-    .catch(err => {
-      console.error(err);
-      toast('Failed to save settings: ' + err.message, 'error');
-    });
+  SETTINGS_REF.set(updated, { merge: true }).then(() => { updateBankPreview(); toast('Settings saved! ✓', 'success'); }).catch(err => toast('Save failed', 'error'));
 }
 
-// ═══════════════════════════════════════════════════════
-// RESET FORM
-// ═══════════════════════════════════════════════════════
 function resetForm() {
   if (!confirm('Clear all form fields?')) return;
-  ['doc-number','doc-date','doc-job','doc-po','client-name','client-gst','client-address','client-city','client-contact','doc-worksite','doc-terms'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
-  document.getElementById('items-container').innerHTML = '';
-  document.getElementById('discount-val').value = '0';
-  calcTotals();
-  addItem(); // start with one empty row
+  ['doc-number','doc-date','doc-job','doc-po','client-name','client-gst','client-address','client-city','client-contact','doc-worksite','doc-terms'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('items-container').innerHTML = ''; document.getElementById('discount-val').value = '0';
+  calcTotals(); addItem();
 }
 
-// ═══════════════════════════════════════════════════════
-// MODULE FUNCTIONS
-// ═══════════════════════════════════════════════════════
-
-// Customers
-function loadCustomers() { /* Load customers data */ }
-function addCustomer() { toast('Add customer feature coming soon', ''); }
-
-// Purchases
-function loadPurchases() { /* Load purchases data */ }
-function addPurchase() { toast('Add purchase feature coming soon', ''); }
-
-// Expenses
-function loadExpenses() { /* Load expenses data */ }
-function addExpense() { toast('Add expense feature coming soon', ''); }
-
-// Salary
-function loadSalary() { /* Load salary data */ }
-function addEmployee() { toast('Add employee feature coming soon', ''); }
-
-// Payments
-function loadPayments() { /* Load payments data */ }
-function addPayment() { toast('Add payment feature coming soon', ''); }
-
-// Reports
-function loadReports() { /* Load reports data */ }
-function showReportType(type) { toast('Report: ' + type + ' (coming soon)', ''); }
-
-// ═══════════════════════════════════════════════════════
-// TOAST
-// ═══════════════════════════════════════════════════════
 function toast(msg, type = '') {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'show ' + type;
+  t.textContent = msg; t.className = 'show ' + type;
   setTimeout(() => t.className = '', 3000);
 }
 
-// ═══════════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', () => {
-  // Set today's date
   document.getElementById('doc-date').valueAsDate = new Date();
-  // Add default empty item row
   addItem();
-  // Update bank preview with whatever defaults are in memory
-  // (will refresh again automatically once Firestore settings load)
   updateBankPreview();
 });
-
-// Close modal on overlay click
-document.getElementById('view-modal').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
-});
+document.getElementById('view-modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
 </script>
 </body>
 </html>
