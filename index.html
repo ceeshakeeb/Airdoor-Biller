@@ -29,8 +29,9 @@
     --blue: var(--san-marino);        /* Primary Buttons / Active States */
     --blue-light: var(--regent-st-blue); /* Highlights / Badges */
     
-    --gold: #d4af37;                  /* Airdoor Brand Accent */
-    --gold-light: rgba(212, 175, 55, 0.15);
+    --gold: #4A7FA7;                  /* Airdoor Secondary Brand Blue (San Marino) */
+    --gold-light: rgba(74, 127, 167, 0.16);
+    --gold-text: #B3CFE5;              /* Light blue accent for text on dark backgrounds */
     
     --white: #ffffff;                 /* Cards, Sidebars, Modals */
     --gray50: var(--porcelain);       /* Main App Background */
@@ -165,6 +166,24 @@
   .stat-card.gold { border-color: var(--gold); }
   .stat-card.green { border-color: var(--green); }
   .stat-card.red { border-color: var(--red); }
+
+  /* ── DARK MODE ── */
+  body.dark-mode {
+    --white: #16202e;
+    --gray50: #0c1521;
+    --gray100: #1c2a3b;
+    --gray200: #2c3e52;
+    --gray400: #7b93ab;
+    --gray600: #b7c8da;
+    --gray800: #eaf2fb;
+  }
+  body.dark-mode { color: var(--gray800); }
+  body.dark-mode .sidebar, body.dark-mode .form-card, body.dark-mode .settings-card, body.dark-mode .module-card, body.dark-mode .table-wrap, body.dark-mode .stat-card, body.dark-mode .mini-modal {
+    background: var(--white); border-color: var(--gray200);
+  }
+  body.dark-mode input, body.dark-mode select, body.dark-mode textarea { background: var(--gray100); color: var(--gray800); border-color: var(--gray200); }
+  body.dark-mode td { color: var(--gray800); border-color: var(--gray100); }
+  body.dark-mode .empty-state { color: var(--gray400); }
   .stat-label { font-size: 12px; font-weight: 700; color: var(--gray400); text-transform: uppercase; letter-spacing: 1px; }
   .stat-value { font-size: 28px; font-weight: 700; margin-top: 8px; font-family: 'DM Sans', sans-serif; color: var(--navy); }
   .stat-sub { font-size: 12px; color: var(--gray400); margin-top: 4px; }
@@ -176,7 +195,7 @@
   .section-title { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--navy); font-weight: 700; }
   .table-wrap { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
   table { width: 100%; border-collapse: collapse; }
-  th { background: var(--navy); color: var(--gold); padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; letter-spacing: 0.5px; }
+  th { background: var(--navy); color: var(--gold-text); padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; letter-spacing: 0.5px; }
   td { padding: 13px 16px; border-bottom: 1px solid var(--gray100); font-size: 13px; color: var(--gray800); }
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: var(--gray50); }
@@ -256,7 +275,7 @@
   .totals-table .total-row td { font-size: 16px; font-weight: 700; color: var(--navy); border-top: 2px solid var(--navy); padding-top: 12px; }
   .totals-table .tax-row td { color: var(--gray600); font-size: 13px; }
   .bank-box { background: var(--navy); color: white; border-radius: 10px; padding: 20px; box-shadow: var(--shadow); }
-  .bank-box h4 { font-size: 11px; letter-spacing: 2px; color: var(--gold); text-transform: uppercase; margin-bottom: 12px; }
+  .bank-box h4 { font-size: 11px; letter-spacing: 2px; color: var(--gold-text); text-transform: uppercase; margin-bottom: 12px; }
   .bank-item { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
   .bank-item span:first-child { color: var(--blue-light); }
   .bank-item span:last-child { font-family: 'DM Sans', sans-serif; font-weight: 500; }
@@ -357,16 +376,41 @@
 </head>
 <body>
 
+<!-- AUTH OVERLAY -->
+<div id="auth-overlay" style="position:fixed;inset:0;background:linear-gradient(135deg,var(--big-stone),var(--cello));z-index:500;display:flex;align-items:center;justify-content:center">
+  <div style="background:var(--white);border-radius:16px;padding:36px;width:90vw;max-width:380px;box-shadow:var(--shadow-lg)">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:800;color:var(--navy)">AIRDOOR</div>
+      <div style="font-size:12px;color:var(--gray600);letter-spacing:1px;margin-top:2px">MEP SOLUTIONS · BILLER LOGIN</div>
+    </div>
+    <div id="auth-error" style="display:none;background:#fdecea;color:var(--red);font-size:12px;padding:8px 12px;border-radius:8px;margin-bottom:14px"></div>
+    <div class="form-group" style="margin-bottom:14px"><label>Email</label><input type="email" id="auth-email" placeholder="you@airdoor.com" /></div>
+    <div class="form-group" style="margin-bottom:18px"><label>Password</label><input type="password" id="auth-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')authSubmit()" /></div>
+    <button class="btn btn-gold" style="width:100%;justify-content:center;padding:12px" onclick="authSubmit()" id="auth-submit-btn">Sign In</button>
+    <div style="text-align:center;margin-top:14px;font-size:12px;color:var(--gray600)">
+      <span id="auth-toggle-text">New here?</span> <a href="#" onclick="toggleAuthMode();return false" id="auth-toggle-link" style="color:var(--blue);font-weight:700;text-decoration:none">Create an account</a>
+    </div>
+  </div>
+</div>
+
 <!-- TOP BAR -->
 <div class="topbar">
   <div class="logo">
-    <img id="topbar-logo-img" src="data:," alt="Airdoor" style="height:40px;max-width:160px;object-fit:contain;display:none" />
+    <div id="topbar-logo-plate" style="background:var(--porcelain);border-radius:8px;padding:5px 12px;display:none;align-items:center">
+      <img id="topbar-logo-img" src="data:," alt="Airdoor" style="height:36px;max-width:150px;object-fit:contain;display:none" />
+    </div>
     <div>
       <div class="logo-text" id="topbar-logo-text">AIRDOOR</div>
       <div style="font-size:11px;color:rgba(255,255,255,0.85);margin-top:2px;letter-spacing:0.5px">Airconditioning Solutions</div>
     </div>
   </div>
   <div class="topbar-actions">
+    <button class="btn btn-ghost" id="darkmode-toggle" onclick="toggleDarkMode()" title="Toggle dark mode">🌙</button>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;margin-right:4px">
+      <span id="user-email-label" style="color:white;font-size:11px;font-weight:600"></span>
+      <span id="user-role-badge" style="background:var(--gold-light);color:var(--gold-text);font-size:9px;font-weight:800;letter-spacing:1px;padding:1px 8px;border-radius:99px;margin-top:2px">VIEWER</span>
+    </div>
+    <button class="btn btn-ghost" onclick="logout()" title="Sign out">🚪</button>
     <button class="btn btn-ghost" onclick="showPage('settings')">⚙️ Settings</button>
     <button class="btn btn-gold" onclick="showPage('new')">＋ New Document</button>
   </div>
@@ -465,7 +509,8 @@
         <div style="display:flex;gap:10px">
           <button class="btn btn-outline" onclick="resetForm()">🗑 Clear</button>
           <button class="btn btn-blue" onclick="previewDoc()">👁 Preview</button>
-          <button class="btn btn-gold" onclick="saveDoc()">💾 Save Document</button>
+          <button class="btn btn-outline" onclick="saveDraft()">📝 Save as Draft</button>
+          <button class="btn btn-gold" onclick="generateDoc()">✅ Generate</button>
         </div>
       </div>
 
@@ -558,6 +603,15 @@
             <label>Notes <span style="font-size:10px;color:var(--gray400);text-transform:none;font-weight:400">(optional — leave blank to hide from invoice)</span></label>
             <textarea id="doc-notes" rows="3" placeholder="Any special instructions, remarks or notes for the client…"></textarea>
           </div>
+          <div class="form-group full">
+            <label>📎 AMC Service Report <span style="font-size:10px;color:var(--gray400);text-transform:none;font-weight:400">(optional — attach the client's signed service report to send alongside this invoice)</span></label>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+              <button type="button" class="btn btn-outline" onclick="document.getElementById('service-report-input').click()">⬆ Upload Service Report</button>
+              <input type="file" id="service-report-input" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="handleServiceReportUpload(event)" />
+              <span id="service-report-filename" style="font-size:12px;color:var(--gray600)"></span>
+              <button type="button" class="btn btn-danger" id="service-report-remove-btn" style="display:none;padding:6px 12px;font-size:12px" onclick="removeServiceReport()">✕ Remove</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -600,6 +654,7 @@
                   <option value="flat">Discount (₹)</option>
                 </select>
               </td><td><input type="number" id="discount-val" value="0" min="0" oninput="calcTotals()" style="width:90px;font-size:13px;padding:6px 8px;text-align:right" /></td></tr>
+              <tr class="tax-row"><td>Round Off</td><td id="t-roundoff">₹0.00</td></tr>
               <tr class="total-row"><td>GRAND TOTAL</td><td id="t-grand">₹0.00</td></tr>
             </table>
             <div style="margin-top:12px">
@@ -650,6 +705,29 @@
           <div class="form-group"><label>Phone</label><input type="text" id="s-phone" value="8592888839, 8592888840" /></div>
           <div class="form-group full"><label>Default Payment Terms</label><textarea id="s-payment-terms" rows="3">30% Advance\n60% Against Installation\n10% Against Commissioning / Pressure Testing</textarea></div>
         </div>
+      </div>
+
+      <div class="settings-card">
+        <h3>📄 Invoice Letterhead Template</h3>
+        <div style="margin-bottom:16px;font-size:13px;color:var(--gray600)">Choose how your invoice header and footer look. Affects PDF, preview and print.</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px" id="template-picker">
+          <div class="template-option" data-template="classic" onclick="selectTemplate('classic')" style="border:2px solid var(--blue);border-radius:10px;padding:14px;cursor:pointer;text-align:center">
+            <div style="height:50px;background:linear-gradient(135deg,transparent 40%,var(--cello) 40%);border-radius:6px;margin-bottom:8px"></div>
+            <div style="font-size:12px;font-weight:700;color:var(--navy)">Classic</div>
+            <div style="font-size:10px;color:var(--gray400)">Slanted banner</div>
+          </div>
+          <div class="template-option" data-template="modern" onclick="selectTemplate('modern')" style="border:2px solid var(--gray200);border-radius:10px;padding:14px;cursor:pointer;text-align:center">
+            <div style="height:50px;display:flex;border-radius:6px;overflow:hidden;margin-bottom:8px"><div style="flex:1;background:var(--gray100)"></div><div style="flex:1;background:var(--cello)"></div></div>
+            <div style="font-size:12px;font-weight:700;color:var(--navy)">Modern</div>
+            <div style="font-size:10px;color:var(--gray400)">Full color bar</div>
+          </div>
+          <div class="template-option" data-template="minimal" onclick="selectTemplate('minimal')" style="border:2px solid var(--gray200);border-radius:10px;padding:14px;cursor:pointer;text-align:center">
+            <div style="height:50px;border-bottom:3px solid var(--cello);border-radius:6px;margin-bottom:8px"></div>
+            <div style="font-size:12px;font-weight:700;color:var(--navy)">Minimal</div>
+            <div style="font-size:10px;color:var(--gray400)">Underline only</div>
+          </div>
+        </div>
+        <input type="hidden" id="s-invoice-template" value="classic" />
       </div>
 
       <div class="settings-card">
@@ -719,6 +797,17 @@
         </div>
       </div>
 
+      <div class="settings-card" id="user-management-card" style="display:none">
+        <h3>👤 User Management <span style="font-size:11px;font-weight:600;color:var(--gray400)">(Admin only)</span></h3>
+        <div style="margin-bottom:14px;font-size:13px;color:var(--gray600);line-height:1.6">Manage who can access this app and what they can do. Roles: <strong>Admin</strong> (full access incl. Settings), <strong>Accountant</strong> (all modules, no Settings), <strong>Viewer</strong> (read-only: Dashboard, Documents, Customers, Reports).</div>
+        <div class="table-wrap" style="box-shadow:none">
+          <table>
+            <thead><tr><th>Email</th><th>Role</th><th>Actions</th></tr></thead>
+            <tbody id="users-tbody"><tr><td colspan="3"><div class="empty-state"><div class="empty-icon">👤</div><h3>Loading users…</h3></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="settings-card">
         <h3>💾 Backup &amp; Restore</h3>
         <div style="margin-bottom:14px;font-size:13px;color:var(--gray600);line-height:1.6">Download all your documents and settings as a JSON file. To restore on another device, use the Restore button and pick a previously saved backup file.</div>
@@ -744,7 +833,8 @@
         <div style="display:flex;gap:10px">
           <button class="btn btn-outline" onclick="showPage('new')">← Edit</button>
           <button class="btn btn-blue" onclick="downloadPDF()">⬇ Download PDF</button>
-          <button class="btn btn-gold" onclick="saveDoc()">💾 Save & Backup</button>
+          <button class="btn btn-outline" onclick="saveDraft()">📝 Save as Draft</button>
+          <button class="btn btn-gold" onclick="generateDoc()">✅ Generate</button>
         </div>
       </div>
       <div class="preview-container">
@@ -802,13 +892,17 @@
     <div class="page" id="page-reports">
       <div class="section-header">
         <div class="section-title">Reports &amp; Ledger</div>
-        <button class="btn btn-blue" onclick="printReport()">🖨 Print Report</button>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-outline" onclick="exportCurrentReportCSV()">📊 Export Excel (CSV)</button>
+          <button class="btn btn-blue" onclick="printReport()">🖨 Export / Print PDF</button>
+        </div>
       </div>
       <!-- Report tabs -->
-      <div style="display:flex;gap:0;margin-bottom:24px;border-bottom:2px solid var(--gray200)">
+      <div style="display:flex;gap:0;margin-bottom:24px;border-bottom:2px solid var(--gray200);flex-wrap:wrap">
         <button class="report-tab active" id="rtab-ledger" onclick="switchReportTab('ledger')">📒 Customer Ledger</button>
         <button class="report-tab" id="rtab-summary" onclick="switchReportTab('summary')">📊 Summary</button>
         <button class="report-tab" id="rtab-expenses" onclick="switchReportTab('expenses')">💸 Expense Report</button>
+        <button class="report-tab" id="rtab-pnl" onclick="switchReportTab('pnl')">📈 Profit &amp; Loss</button>
       </div>
       <!-- LEDGER TAB -->
       <div id="report-ledger" class="report-panel">
@@ -865,6 +959,26 @@
             <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th></tr></thead>
             <tbody id="rpt-exp-tbody"></tbody>
             <tfoot><tr style="background:var(--navy)"><td colspan="3" style="color:var(--gold);font-weight:700;padding:12px 16px">TOTAL</td><td style="color:white;font-weight:700;padding:12px 16px;text-align:right" id="rpt-exp-total"></td></tr></tfoot>
+          </table>
+        </div>
+      </div>
+      <!-- P&L TAB -->
+      <div id="report-pnl" class="report-panel" style="display:none">
+        <div style="display:flex;gap:12px;margin-bottom:20px;align-items:flex-end;flex-wrap:wrap">
+          <div class="form-group"><label>From</label><input type="date" id="pnl-from" onchange="renderPnL()" /></div>
+          <div class="form-group"><label>To</label><input type="date" id="pnl-to" onchange="renderPnL()" /></div>
+          <button class="btn btn-outline" onclick="document.getElementById('pnl-from').value='';document.getElementById('pnl-to').value='';renderPnL()">Clear</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
+          <div class="stat-card green" data-icon="💰"><div class="stat-label">Revenue</div><div class="stat-value" id="pnl-revenue">₹0</div><div class="stat-sub">Tax invoices billed</div></div>
+          <div class="stat-card red" data-icon="📉"><div class="stat-label">Total Costs</div><div class="stat-value" id="pnl-costs">₹0</div><div class="stat-sub">Expenses + Salary + Purchases</div></div>
+          <div class="stat-card blue" data-icon="📈"><div class="stat-label">Net Profit</div><div class="stat-value" id="pnl-profit">₹0</div><div class="stat-sub" id="pnl-margin">0% margin</div></div>
+          <div class="stat-card gold" data-icon="🧾"><div class="stat-label">Period</div><div class="stat-value" style="font-size:14px" id="pnl-period">All time</div><div class="stat-sub">Reporting window</div></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Line Item</th><th style="text-align:right">Amount</th></tr></thead>
+            <tbody id="pnl-tbody"></tbody>
           </table>
         </div>
       </div>
@@ -971,9 +1085,12 @@
       <h2 id="modal-title">Document</h2>
       <div style="display:flex;gap:8px">
         <button class="btn btn-blue" onclick="downloadSavedPDF()">⬇ PDF</button>
+        <button class="btn btn-outline" onclick="sendViaEmail(viewingDocId)">📧 Email</button>
+        <button class="btn btn-outline" style="color:#1ba94c" onclick="sendViaWhatsApp(viewingDocId)">💬 WhatsApp</button>
         <button class="btn btn-ghost" style="color:var(--gray600);border:1.5px solid var(--gray400)" onclick="closeModal()">✕ Close</button>
       </div>
     </div>
+    <div id="modal-service-report-note" style="display:none;margin-bottom:12px;background:var(--blue-light);border-radius:8px;padding:10px 16px;font-size:13px"></div>
     <div class="preview-container">
       <div id="modal-invoice-preview"></div>
     </div>
@@ -1170,7 +1287,8 @@ let settings = {
   quotPrefix: 'ADM/QUT/25-26/',
   taxNext: 1,
   proNext: 1,
-  quotNext: 1
+  quotNext: 1,
+  invoiceTemplate: 'classic'
 };
 
 let currentDocType = 'Tax Invoice';
@@ -1204,8 +1322,117 @@ function listenToData() {
   listenToPayments();
 }
 
-auth.onAuthStateChanged(user => { if (user) listenToData(); });
-auth.signInAnonymously().catch(err => console.error(err));
+let currentUser = null;
+let currentRole = 'viewer'; // admin | accountant | viewer
+let authMode = 'signin';
+
+// Role permission map: which nav pages each role can see
+const ROLE_PAGES = {
+  admin: ['dashboard','new','list','customers','purchases','expenses','salary','payments','reports','settings'],
+  accountant: ['dashboard','new','list','customers','purchases','expenses','salary','payments','reports'],
+  viewer: ['dashboard','list','customers','reports']
+};
+
+function toggleAuthMode() {
+  authMode = authMode === 'signin' ? 'signup' : 'signin';
+  document.getElementById('auth-submit-btn').textContent = authMode === 'signin' ? 'Sign In' : 'Create Account';
+  document.getElementById('auth-toggle-text').textContent = authMode === 'signin' ? 'New here?' : 'Already have an account?';
+  document.getElementById('auth-toggle-link').textContent = authMode === 'signin' ? 'Create an account' : 'Sign in';
+  document.getElementById('auth-error').style.display = 'none';
+}
+
+function authSubmit() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pass = document.getElementById('auth-password').value;
+  const errEl = document.getElementById('auth-error');
+  errEl.style.display = 'none';
+  if (!email || !pass) { errEl.textContent = 'Email and password required'; errEl.style.display = 'block'; return; }
+  const action = authMode === 'signin'
+    ? auth.signInWithEmailAndPassword(email, pass)
+    : auth.createUserWithEmailAndPassword(email, pass);
+  action.catch(err => { errEl.textContent = err.message; errEl.style.display = 'block'; });
+}
+
+function logout() {
+  if (!confirm('Sign out?')) return;
+  auth.signOut();
+}
+
+async function resolveUserRole(user) {
+  const ref = db.collection('users').doc(user.uid);
+  const snap = await ref.get();
+  if (snap.exists) {
+    return snap.data().role || 'viewer';
+  }
+  // First-ever user becomes admin automatically; everyone after defaults to viewer (admin can promote later)
+  const allUsers = await db.collection('users').limit(1).get();
+  const role = allUsers.empty ? 'admin' : 'viewer';
+  await ref.set({ email: user.email, role, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  return role;
+}
+
+function applyRoleToUI() {
+  const allowed = ROLE_PAGES[currentRole] || ROLE_PAGES.viewer;
+  document.querySelectorAll('.nav-item').forEach(item => {
+    const page = item.getAttribute('data-page');
+    item.style.display = allowed.includes(page) ? '' : 'none';
+  });
+  const newBtn = document.querySelector('.topbar-actions .btn-gold');
+  if (newBtn && currentRole === 'viewer') newBtn.style.display = 'none';
+  document.body.setAttribute('data-role', currentRole);
+  const roleBadge = document.getElementById('user-role-badge');
+  if (roleBadge) roleBadge.textContent = currentRole.toUpperCase();
+  const userEmailEl = document.getElementById('user-email-label');
+  if (userEmailEl && currentUser) userEmailEl.textContent = currentUser.email;
+  const umCard = document.getElementById('user-management-card');
+  if (umCard) umCard.style.display = currentRole === 'admin' ? 'block' : 'none';
+  if (currentRole === 'admin') listenToUsers();
+}
+
+let appUsers = [];
+function listenToUsers() {
+  db.collection('users').onSnapshot(snap => {
+    appUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderUsersTable();
+  });
+}
+
+function renderUsersTable() {
+  const tbody = document.getElementById('users-tbody');
+  if (!tbody) return;
+  if (!appUsers.length) { tbody.innerHTML = '<tr><td colspan="3"><div class="empty-state"><div class="empty-icon">👤</div><h3>No users yet</h3></div></td></tr>'; return; }
+  tbody.innerHTML = appUsers.map(u => `<tr>
+    <td style="font-weight:600;color:var(--navy)">${u.email || '—'}${u.id === currentUser?.uid ? ' <span style="color:var(--gray400);font-size:11px">(you)</span>' : ''}</td>
+    <td><select onchange="setUserRole('${u.id}', this.value)" style="font-size:12px;padding:5px 10px" ${u.id === currentUser?.uid ? 'disabled' : ''}>
+      <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
+      <option value="accountant" ${u.role==='accountant'?'selected':''}>Accountant</option>
+      <option value="viewer" ${u.role==='viewer'?'selected':''}>Viewer</option>
+    </select></td>
+    <td style="font-size:11px;color:var(--gray400)">${u.id === currentUser?.uid ? 'Cannot change your own role' : ''}</td>
+  </tr>`).join('');
+}
+
+function setUserRole(uid, role) {
+  db.collection('users').doc(uid).set({ role }, { merge: true }).then(() => toast('Role updated! ✓', 'success'));
+}
+
+function toggleDarkMode() {
+  document.body.classList.toggle('dark-mode');
+  localStorage.setItem('airdoor-dark-mode', document.body.classList.contains('dark-mode') ? '1' : '0');
+}
+
+auth.onAuthStateChanged(async user => {
+  if (user) {
+    currentUser = user;
+    currentRole = await resolveUserRole(user);
+    document.getElementById('auth-overlay').style.display = 'none';
+    applyRoleToUI();
+    listenToData();
+  } else {
+    currentUser = null;
+    document.getElementById('auth-overlay').style.display = 'flex';
+  }
+});
 
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -1298,11 +1525,14 @@ function calcTotals() {
     else if (taxType === 'igst') { igst = taxable * 0.18; }
   }
 
-  const grand = taxable + cgst + sgst + igst;
+  const rawGrand = taxable + cgst + sgst + igst;
+  const grand = Math.round(rawGrand);
+  const roundOff = grand - rawGrand;
   document.getElementById('t-subtotal').textContent = '₹' + subtotal.toFixed(2);
   document.getElementById('t-cgst').textContent = '₹' + cgst.toFixed(2);
   document.getElementById('t-sgst').textContent = '₹' + sgst.toFixed(2);
   document.getElementById('t-igst').textContent = '₹' + igst.toFixed(2);
+  document.getElementById('t-roundoff').textContent = (roundOff >= 0 ? '+' : '') + '₹' + roundOff.toFixed(2);
   document.getElementById('t-grand').textContent = '₹' + grand.toFixed(2);
   updateBankPreview();
 }
@@ -1339,7 +1569,9 @@ function collectFormData() {
   if (currentDocType !== 'Quotation') {
     if (taxType === 'cgst_sgst') { cgst = sgst = taxable * 0.09; } else if (taxType === 'igst') { igst = taxable * 0.18; }
   }
-  const grand = taxable + cgst + sgst + igst;
+  const rawGrand = taxable + cgst + sgst + igst;
+  const grand = Math.round(rawGrand);
+  const roundOff = grand - rawGrand;
 
   return {
     id: Date.now().toString(), type: currentDocType, number: document.getElementById('doc-number').value, date: document.getElementById('doc-date').value,
@@ -1348,7 +1580,9 @@ function collectFormData() {
     clientContact: document.getElementById('client-contact').value, worksite: document.getElementById('doc-worksite').value, terms: document.getElementById('doc-terms').value,
     paymentTerms: document.getElementById('doc-payment-terms').value,
     notes: document.getElementById('doc-notes').value,
-    items, subtotal, discount, discType, discVal, taxType, cgst, sgst, igst, grand, settings: { ...settings }
+    serviceReportUrl: pendingServiceReport ? pendingServiceReport.url : (currentServiceReportOnLoad ? currentServiceReportOnLoad.url : ''),
+    serviceReportName: pendingServiceReport ? pendingServiceReport.name : (currentServiceReportOnLoad ? currentServiceReportOnLoad.name : ''),
+    items, subtotal, discount, discType, discVal, taxType, cgst, sgst, igst, roundOff, grand, settings: { ...settings }
   };
 }
 
@@ -1368,13 +1602,15 @@ function generateInvoiceHTML(doc) {
     } else if (doc.taxType === 'igst') { taxRows = `<tr><td style="padding:5px 10px;color:#475569">IGST @ 18%</td><td style="padding:5px 10px;text-align:right">${fmt(doc.igst)}</td></tr>`; }
   }
   let discRow = doc.discount > 0 ? `<tr><td style="padding:5px 10px;color:#dc2626">Discount</td><td style="padding:5px 10px;text-align:right;color:#dc2626">-${fmt(doc.discount)}</td></tr>` : '';
+  const roundOff = doc.roundOff || 0;
+  const roundOffRow = Math.abs(roundOff) >= 0.01 ? `<tr><td style="padding:5px 10px;color:#475569">Round Off</td><td style="padding:5px 10px;text-align:right">${roundOff >= 0 ? '+' : '-'}₹${Math.abs(roundOff).toFixed(2)}</td></tr>` : '';
   
   const itemRows = doc.items.map((item, i) => {
     const bg = i % 2 === 0 ? '#ffffff' : '#f0f6fc';
     return `<tr style="background:${bg}"><td style="text-align:center;color:#4A7FA7;padding:7px 8px;font-size:11px;border-bottom:1px solid #e8f0f8">${i+1}</td><td style="padding:7px 8px;line-height:1.5;font-size:12px;color:#1e293b;border-bottom:1px solid #e8f0f8">${item.desc}</td><td style="text-align:right;padding:7px 8px;font-size:12px;color:#1e293b;border-bottom:1px solid #e8f0f8">${item.qty}</td><td style="text-align:center;padding:7px 8px;font-size:12px;color:#475569;border-bottom:1px solid #e8f0f8">${item.unit}</td><td style="text-align:right;padding:7px 8px;font-size:12px;color:#1e293b;border-bottom:1px solid #e8f0f8">${fmt(item.rate)}</td><td style="text-align:right;padding:7px 8px;font-size:12px;font-weight:600;color:#1A3D63;border-bottom:1px solid #e8f0f8">${fmt(item.amount)}</td></tr>`;
   }).join('');
   const gstLine = s.gst ? `<div style="margin-top:3px;font-size:11px;color:#475569"><strong>GST:</strong> ${s.gst}</div>` : '';
-  const docLabel = doc.type === 'Tax Invoice' ? 'INVOICE' : doc.type === 'Proforma Invoice' ? 'PROFORMA' : 'QUOTATION';
+  const docLabel = doc.type === 'Tax Invoice' ? 'TAX INVOICE' : doc.type === 'Proforma Invoice' ? 'PROFORMA' : doc.type === 'Invoice' ? 'INVOICE' : 'QUOTATION';
   
   const PRIMARY = '#1A3D63';
   const PRIMARY_DARK = '#0A1931';
@@ -1392,17 +1628,35 @@ function generateInvoiceHTML(doc) {
       <div style="font-size:11px;color:#475569;line-height:1.8;white-space:pre-line">${doc.notes}</div>
     </div>` : '';
 
+  // Letterhead template: classic (slant banner) | modern (full bar) | minimal (underline only)
+  const template = s.invoiceTemplate || 'classic';
+  let headerBannerHTML;
+  if (template === 'modern') {
+    headerBannerHTML = `<div style="background:${PRIMARY};color:${ACCENT};padding:14px 32px;display:flex;align-items:center;justify-content:flex-end;flex:1;border-radius:0 0 0 24px">
+          <div style="font-size:22px;font-weight:800;letter-spacing:4px">${docLabel}</div>
+        </div>`;
+  } else if (template === 'minimal') {
+    headerBannerHTML = `<div style="display:flex;align-items:center;padding:14px 24px 8px 24px">
+          <div style="font-size:24px;font-weight:800;letter-spacing:3px;color:${PRIMARY};border-bottom:3px solid ${PRIMARY};padding-bottom:4px">${docLabel}</div>
+        </div>`;
+  } else { // classic
+    headerBannerHTML = `<div style="background:${PRIMARY};color:${ACCENT};padding:14px 32px;display:flex;align-items:center;justify-content:flex-end;min-width:220px;clip-path:polygon(15% 0,100% 0,100% 100%,0% 100%)">
+          <div style="font-size:22px;font-weight:800;letter-spacing:4px">${docLabel}</div>
+        </div>`;
+  }
+  const footerBarHTML = template === 'minimal'
+    ? `<div style="border-top:2px solid ${PRIMARY};color:${PRIMARY};text-align:center;padding:9px;font-size:13px;font-weight:600;flex-shrink:0">Thank you for your business!</div>`
+    : `<div style="background:${PRIMARY};color:${ACCENT};text-align:center;padding:9px;font-size:13px;font-weight:600;flex-shrink:0;clip-path:polygon(0 0,100% 12%,100% 100%,0 100%)">Thank you for your business!</div>`;
+
   return `
     <div style="font-family:'DM Sans',sans-serif;color:#1e293b;background:#ffffff;width:100%;min-height:880px;position:relative;border:1px solid #e2e8f0;display:flex;flex-direction:column;box-sizing:border-box">
       
       <!-- HEADER ROW: Logo + Doc Type Label -->
       <div style="display:flex;justify-content:space-between;align-items:stretch;position:relative;flex-shrink:0">
         <div style="padding:14px 24px 8px 24px;display:flex;align-items:center;gap:14px">
-          ${s.logoDataUrl ? `<img src="${s.logoDataUrl}" alt="Logo" style="max-height:38px;max-width:180px;object-fit:contain;display:block" />` : `<div style="width:34px;height:34px;background:${PRIMARY};border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:${ACCENT}">A</div><div style="font-size:22px;font-weight:800;color:${PRIMARY};letter-spacing:1px">airdoor</div>`}
+          ${s.logoDataUrl ? `<div style="display:flex;flex-direction:column;gap:1px"><img src="${s.logoDataUrl}" alt="Logo" style="max-height:49px;max-width:234px;object-fit:contain;display:block" /><div style="font-size:9px;color:#4A7FA7;letter-spacing:2px;font-weight:600;text-transform:uppercase;margin-left:2px">MEP Solutions</div></div>` : `<div style="width:44px;height:44px;background:${PRIMARY};border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:700;color:${ACCENT}">A</div><div style="display:flex;flex-direction:column;gap:1px"><div style="font-size:29px;font-weight:800;color:${PRIMARY};letter-spacing:1px;line-height:1">airdoor</div><div style="font-size:9px;color:#4A7FA7;letter-spacing:2px;font-weight:600;text-transform:uppercase">MEP Solutions</div></div>`}
         </div>
-        <div style="background:${PRIMARY};color:${ACCENT};padding:14px 32px;display:flex;align-items:center;justify-content:flex-end;min-width:220px;clip-path:polygon(15% 0,100% 0,100% 100%,0% 100%)">
-          <div style="font-size:22px;font-weight:800;letter-spacing:4px">${docLabel}</div>
-        </div>
+        ${headerBannerHTML}
       </div>
 
       <!-- COMPANY INFO + INVOICE META -->
@@ -1466,13 +1720,13 @@ function generateInvoiceHTML(doc) {
         <div style="display:flex;flex-direction:column;justify-content:flex-end;gap:0">
           <table style="width:100%;border-collapse:collapse;font-size:13px;color:#1e293b">
             <tr><td style="padding:6px 10px;color:#475569">Subtotal</td><td style="padding:6px 10px;text-align:right;font-weight:700">${fmt(doc.subtotal)}</td></tr>
-            ${discRow}${taxRows}
+            ${discRow}${taxRows}${roundOffRow}
           </table>
           <div style="background:${PRIMARY};color:${ACCENT};display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-radius:6px;margin-top:6px">
             <div style="font-size:14px;font-weight:800;letter-spacing:1px">TOTAL</div>
             <div style="font-size:16px;font-weight:800">${fmt(doc.grand)}</div>
           </div>
-          <div style="text-align:right;padding-top:64px">
+          <div style="text-align:right;padding-top:77px">
             <div style="border-top:1.5px solid ${PRIMARY};padding-top:6px;display:inline-block;min-width:180px">
               <div style="font-size:12px;font-weight:700;color:${PRIMARY}">${s.company}</div>
               <div style="font-size:11px;color:#475569">Authorised Signatory</div>
@@ -1482,7 +1736,7 @@ function generateInvoiceHTML(doc) {
       </div>
 
       <!-- FOOTER BAR -->
-      <div style="background:${PRIMARY};color:${ACCENT};text-align:center;padding:9px;font-size:13px;font-weight:600;flex-shrink:0;clip-path:polygon(0 0,100% 12%,100% 100%,0 100%)">Thank you for your business!</div>
+      ${footerBarHTML}
     </div>`;
 }
 
@@ -1492,29 +1746,90 @@ function previewDoc() {
   showPage('preview');
 }
 
-function saveDoc() {
+let editingDocId = null;
+
+function _persistDoc(doc, status, successMsg) {
+  doc.status = status;
+  if (editingDocId) {
+    const id = editingDocId;
+    delete doc.id;
+    doc.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+    return db.collection(DOCS_COLLECTION).doc(id).set(doc, { merge: true })
+      .then(() => { toast(successMsg, 'success'); editingDocId = null; showPage('list'); filterDocs('all'); });
+  } else {
+    delete doc.id;
+    doc.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    return db.collection(DOCS_COLLECTION).add(doc)
+      .then(() => {
+        if (status === 'final') {
+          const updates = {};
+          if (doc.type === 'Tax Invoice') updates.taxNext = (settings.taxNext || 1) + 1;
+          else if (doc.type === 'Proforma Invoice') updates.proNext = (settings.proNext || 1) + 1;
+          else updates.quotNext = (settings.quotNext || 1) + 1;
+          return SETTINGS_REF.set(updates, { merge: true });
+        }
+      })
+      .then(() => { toast(successMsg, 'success'); showPage('list'); filterDocs('all'); });
+  }
+}
+
+function saveDraft() {
+  const doc = collectFormData();
+  if (!doc.clientName) { toast('Please enter client name', 'error'); return; }
+  _persistDoc(doc, 'draft', 'Draft saved! You can edit it later. ✓').then(() => { pendingServiceReport = null; currentServiceReportOnLoad = null; }).catch(err => toast('Save failed: ' + err.message, 'error'));
+}
+
+function generateDoc() {
   const doc = collectFormData();
   if (!doc.clientName) { toast('Please enter client name', 'error'); return; }
   if (!doc.number) { autoNumber(); doc.number = document.getElementById('doc-number').value; }
   if (doc.items.length === 0) { toast('Add at least one line item', 'error'); return; }
+  if (!confirm('Once generated, this document is FINAL and cannot be edited. Continue?')) return;
+  _persistDoc(doc, 'final', 'Document generated — locked for editing! ✓').then(() => { pendingServiceReport = null; currentServiceReportOnLoad = null; }).catch(err => toast('Generate failed: ' + err.message, 'error'));
+}
 
-  delete doc.id;
-  doc.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+function editDraft(id) {
+  const doc = documents.find(d => d.id === id);
+  if (!doc) return;
+  if (doc.status === 'final') { toast('Generated documents cannot be edited', 'error'); return; }
+  editingDocId = id;
+  currentDocType = doc.type;
+  document.getElementById('doc-number').value = doc.number || '';
+  document.getElementById('doc-date').value = doc.date || '';
+  document.getElementById('doc-job').value = doc.jobNo || '';
+  document.getElementById('doc-po').value = doc.poNo || '';
+  document.getElementById('client-name').value = doc.clientName || '';
+  document.getElementById('client-gst').value = doc.clientGST || '';
+  document.getElementById('client-address').value = doc.clientAddress || '';
+  document.getElementById('client-city').value = doc.clientCity || '';
+  document.getElementById('client-contact').value = doc.clientContact || '';
+  document.getElementById('doc-worksite').value = doc.worksite || '';
+  document.getElementById('doc-terms').value = doc.terms || '';
+  document.getElementById('doc-payment-terms').value = doc.paymentTerms || '';
+  document.getElementById('doc-notes').value = doc.notes || '';
+  document.getElementById('tax-type').value = doc.taxType || 'cgst_sgst';
+  document.getElementById('discount-type').value = doc.discType || 'none';
+  document.getElementById('discount-val').value = doc.discVal || 0;
 
-  db.collection(DOCS_COLLECTION).add(doc)
-    .then(() => {
-      const updates = {};
-      if (doc.type === 'Tax Invoice') updates.taxNext = (settings.taxNext || 1) + 1;
-      else if (doc.type === 'Proforma Invoice') updates.proNext = (settings.proNext || 1) + 1;
-      else updates.quotNext = (settings.quotNext || 1) + 1;
-      return SETTINGS_REF.set(updates, { merge: true });
-    })
-    .then(() => {
-      toast('Document saved successfully! ✓', 'success');
-      showPage('list');
-      filterDocs('all');
-    })
-    .catch(err => toast('Save failed: ' + err.message, 'error'));
+  pendingServiceReport = null;
+  removeServiceReport();
+  if (doc.serviceReportUrl) {
+    currentServiceReportOnLoad = { url: doc.serviceReportUrl, name: doc.serviceReportName || 'Service Report' };
+    document.getElementById('service-report-filename').textContent = '✓ ' + currentServiceReportOnLoad.name + ' (already attached)';
+    document.getElementById('service-report-remove-btn').style.display = '';
+  } else {
+    currentServiceReportOnLoad = null;
+  }
+
+  document.getElementById('items-container').innerHTML = '';
+  (doc.items || []).forEach(item => addItem(item.desc, item.qty, item.unit, item.rate, item.amount));
+  if (!doc.items || !doc.items.length) addItem();
+
+  selectType(doc.type);
+  updateTaxDisplay();
+  calcTotals();
+  showPage('new');
+  toast('Editing draft — make changes and save', 'success');
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1602,7 +1917,36 @@ function renderList() {
 function docRow(doc, showWorksite = false) {
   const typeClass = doc.type === 'Tax Invoice' ? 'type-tax' : doc.type === 'Proforma Invoice' ? 'type-proforma' : 'type-quotation';
   const dateStr = doc.date ? new Date(doc.date).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : '—';
-  return `<tr><td><span style="font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600">${doc.number || '—'}</span></td><td><span class="doc-type ${typeClass}">${doc.type}</span></td><td style="font-weight:700; color:var(--navy);">${doc.clientName || '—'}</td>${showWorksite ? `<td style="font-size:12px;color:var(--gray600)">${doc.worksite || '—'}</td>` : ''}<td style="font-size:12px;color:var(--gray600)">${dateStr}</td><td class="amount-cell">₹${Number(doc.grand||0).toLocaleString('en-IN', {minimumFractionDigits:2})}</td><td><div style="display:flex;gap:6px"><button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="viewDoc('${doc.id}')">👁 View</button><button class="btn btn-blue" style="padding:5px 10px;font-size:12px" onclick="downloadDocPDF('${doc.id}')">⬇ PDF</button><button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deleteDoc('${doc.id}')">🗑</button></div></td></tr>`;
+  const isDraft = doc.status === 'draft';
+  const statusBadge = isDraft ? `<span style="background:#fff3cd;color:#92740a;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;margin-left:6px">DRAFT</span>` : `<span style="background:#e6f4ea;color:#1e7e34;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;margin-left:6px">FINAL 🔒</span>`;
+  const editBtn = isDraft ? `<button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="editDraft('${doc.id}')">✏ Edit</button>` : '';
+  const reportIcon = doc.serviceReportUrl ? `<span title="Service report attached" style="font-size:13px">📎</span>` : '';
+  return `<tr><td><span style="font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600">${doc.number || '—'}</span>${statusBadge} ${reportIcon}</td><td><span class="doc-type ${typeClass}">${doc.type}</span></td><td style="font-weight:700; color:var(--navy);">${doc.clientName || '—'}</td>${showWorksite ? `<td style="font-size:12px;color:var(--gray600)">${doc.worksite || '—'}</td>` : ''}<td style="font-size:12px;color:var(--gray600)">${dateStr}</td><td class="amount-cell">₹${Number(doc.grand||0).toLocaleString('en-IN', {minimumFractionDigits:2})}</td><td><div style="display:flex;gap:6px;flex-wrap:wrap">${editBtn}<button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="viewDoc('${doc.id}')">👁 View</button><button class="btn btn-blue" style="padding:5px 10px;font-size:12px" onclick="downloadDocPDF('${doc.id}')">⬇ PDF</button><button class="btn btn-outline" style="padding:5px 8px;font-size:12px" title="Send via Email" onclick="sendViaEmail('${doc.id}')">📧</button><button class="btn btn-outline" style="padding:5px 8px;font-size:12px;color:#1ba94c" title="Send via WhatsApp" onclick="sendViaWhatsApp('${doc.id}')">💬</button><button class="btn btn-danger" style="padding:5px 10px;font-size:12px" onclick="deleteDoc('${doc.id}')">🗑</button></div></td></tr>`;
+}
+
+function sendViaEmail(id) {
+  const doc = documents.find(d => d.id === id);
+  if (!doc) return;
+  const subject = `${doc.type} ${doc.number || ''} — ${settings.company || 'Airdoor'}`;
+  let body = `Dear ${doc.clientName || 'Customer'},\n\nPlease find the details of your ${doc.type} below:\n\nDoc No.: ${doc.number || '—'}\nDate: ${doc.date || '—'}\nAmount: ₹${Number(doc.grand||0).toLocaleString('en-IN',{minimumFractionDigits:2})}\n`;
+  if (doc.worksite) body += `Worksite: ${doc.worksite}\n`;
+  if (doc.serviceReportUrl) body += `\nService Report: ${doc.serviceReportUrl}\n`;
+  body += `\nPlease download the invoice PDF from the app and attach it before sending, or use the Download PDF button to save a copy first.\n\nThank you for your business!\n${settings.company || 'Airdoor'}`;
+  const email = (doc.clientContact && doc.clientContact.includes('@')) ? doc.clientContact.split(/[\s,/]+/).find(p => p.includes('@')) || '' : '';
+  window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  toast('Opening email client… attach the downloaded PDF manually', '');
+}
+
+function sendViaWhatsApp(id) {
+  const doc = documents.find(d => d.id === id);
+  if (!doc) return;
+  let phone = (doc.clientContact || '').replace(/[^0-9]/g, '');
+  if (phone.length === 10) phone = '91' + phone; // default India code
+  let msg = `Hi ${doc.clientName || ''}, here are your ${doc.type} details from ${settings.company || 'Airdoor'}:\n\nDoc No.: ${doc.number || '—'}\nDate: ${doc.date || '—'}\nAmount: ₹${Number(doc.grand||0).toLocaleString('en-IN',{minimumFractionDigits:2})}`;
+  if (doc.serviceReportUrl) msg += `\n\n📎 Service Report: ${doc.serviceReportUrl}`;
+  msg += `\n\nThank you for your business! Please find the invoice PDF attached separately.`;
+  const url = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
 }
 
 function viewDoc(id) {
@@ -1611,6 +1955,13 @@ function viewDoc(id) {
   viewingDocId = id;
   document.getElementById('modal-title').textContent = doc.type + ' — ' + doc.number;
   document.getElementById('modal-invoice-preview').innerHTML = generateInvoiceHTML(doc);
+  const noteEl = document.getElementById('modal-service-report-note');
+  if (doc.serviceReportUrl) {
+    noteEl.innerHTML = `📎 <strong>Service Report attached:</strong> ${doc.serviceReportName || 'View file'} — <a href="${doc.serviceReportUrl}" target="_blank" style="color:var(--navy);font-weight:700">Open / Download</a>`;
+    noteEl.style.display = 'block';
+  } else {
+    noteEl.style.display = 'none';
+  }
   document.getElementById('view-modal').classList.add('open');
 }
 
@@ -1730,14 +2081,17 @@ function loadSettings() {
   const logoImg = document.getElementById('logo-preview-img');
   const logoPh = document.getElementById('logo-placeholder');
   const topbarLogoImg = document.getElementById('topbar-logo-img');
+  const topbarLogoPlate = document.getElementById('topbar-logo-plate');
   if (settings.logoDataUrl) {
     if (logoImg) { logoImg.src = settings.logoDataUrl; logoImg.style.display = 'block'; }
     if (logoPh) logoPh.style.display = 'none';
     if (topbarLogoImg) { topbarLogoImg.src = settings.logoDataUrl; topbarLogoImg.style.display = 'block'; }
+    if (topbarLogoPlate) topbarLogoPlate.style.display = 'flex';
   } else {
     if (logoImg) logoImg.style.display = 'none';
     if (logoPh) logoPh.style.display = 'block';
     if (topbarLogoImg) topbarLogoImg.style.display = 'none';
+    if (topbarLogoPlate) topbarLogoPlate.style.display = 'none';
   }
   document.getElementById('s-company').value = settings.company || '';
   document.getElementById('s-gst').value = settings.gst || '';
@@ -1756,8 +2110,43 @@ function loadSettings() {
   document.getElementById('s-tax-next').value = settings.taxNext || 1;
   document.getElementById('s-pro-next').value = settings.proNext || 1;
   document.getElementById('s-quot-next').value = settings.quotNext || 1;
+  document.getElementById('s-invoice-template').value = settings.invoiceTemplate || 'classic';
+  selectTemplate(settings.invoiceTemplate || 'classic', false);
   
   updateMainHeader();
+}
+
+function selectTemplate(name, persist = true) {
+  document.getElementById('s-invoice-template').value = name;
+  document.querySelectorAll('.template-option').forEach(el => {
+    el.style.borderColor = el.getAttribute('data-template') === name ? 'var(--blue)' : 'var(--gray200)';
+  });
+  if (persist) SETTINGS_REF.set({ invoiceTemplate: name }, { merge: true }).then(() => toast('Letterhead template updated! ✓', 'success'));
+}
+
+let pendingServiceReport = null; // { url, name } for current new/edit document
+let currentServiceReportOnLoad = null; // existing report when editing a draft
+
+function handleServiceReportUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 8 * 1024 * 1024) { toast('File too large (max 8MB)', 'error'); return; }
+  toast('Uploading service report…', '');
+  const path = `service-reports/${Date.now()}_${file.name}`;
+  const ref = storage.ref().child(path);
+  ref.put(file).then(snap => snap.ref.getDownloadURL()).then(url => {
+    pendingServiceReport = { url, name: file.name };
+    document.getElementById('service-report-filename').textContent = '✓ ' + file.name;
+    document.getElementById('service-report-remove-btn').style.display = '';
+    toast('Service report uploaded! ✓', 'success');
+  }).catch(err => toast('Upload failed: ' + err.message, 'error'));
+}
+
+function removeServiceReport() {
+  pendingServiceReport = null;
+  document.getElementById('service-report-input').value = '';
+  document.getElementById('service-report-filename').textContent = '';
+  document.getElementById('service-report-remove-btn').style.display = 'none';
 }
 
 function handleLogoUpload(e) {
@@ -1790,13 +2179,17 @@ function saveSettings() {
     branch: document.getElementById('s-branch').value, ifsc: document.getElementById('s-ifsc').value, paymentTerms: document.getElementById('s-payment-terms').value,
     taxPrefix: document.getElementById('s-tax-prefix').value,
     proPrefix: document.getElementById('s-pro-prefix').value, quotPrefix: document.getElementById('s-quot-prefix').value,
-    taxNext: parseInt(document.getElementById('s-tax-next').value) || 1, proNext: parseInt(document.getElementById('s-pro-next').value) || 1, quotNext: parseInt(document.getElementById('s-quot-next').value) || 1
+    taxNext: parseInt(document.getElementById('s-tax-next').value) || 1, proNext: parseInt(document.getElementById('s-pro-next').value) || 1, quotNext: parseInt(document.getElementById('s-quot-next').value) || 1,
+    invoiceTemplate: document.getElementById('s-invoice-template').value || 'classic'
   };
   SETTINGS_REF.set(updated, { merge: true }).then(() => { updateBankPreview(); toast('Settings saved! ✓', 'success'); }).catch(err => toast('Save failed', 'error'));
 }
 
 function resetForm() {
   if (!confirm('Clear all form fields?')) return;
+  editingDocId = null;
+  removeServiceReport();
+  currentServiceReportOnLoad = null;
   ['doc-number','doc-date','doc-job','doc-po','client-name','client-gst','client-address','client-city','client-contact','doc-worksite','doc-terms','doc-payment-terms','doc-notes'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('items-container').innerHTML = ''; document.getElementById('discount-val').value = '0';
   calcTotals(); addItem();
@@ -2032,7 +2425,9 @@ function closeMiniModal(id) { document.getElementById(id).classList.remove('open
 // ═══════════════════════════════════════════════════════
 // REPORTS
 // ═══════════════════════════════════════════════════════
+let currentReportTab = 'ledger';
 function switchReportTab(tab) {
+  currentReportTab = tab;
   document.querySelectorAll('.report-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('rtab-' + tab).classList.add('active');
   document.querySelectorAll('.report-panel').forEach(p => p.style.display = 'none');
@@ -2040,6 +2435,7 @@ function switchReportTab(tab) {
   if (tab === 'ledger') renderLedger();
   if (tab === 'summary') renderSummary();
   if (tab === 'expenses') renderExpenseReport();
+  if (tab === 'pnl') renderPnL();
 }
 
 function renderLedger() {
@@ -2123,6 +2519,85 @@ function renderExpenseReport() {
 }
 
 function printReport() { window.print(); }
+
+function renderPnL() {
+  const from = document.getElementById('pnl-from')?.value || '';
+  const to = document.getElementById('pnl-to')?.value || '';
+  const inRange = d => (!from || (d||'') >= from) && (!to || (d||'') <= to);
+
+  const revenue = documents.filter(d => d.type === 'Tax Invoice' && d.status !== 'draft' && inRange(d.date)).reduce((s,d) => s + (d.grand||0), 0);
+  const expTotal = expenses.filter(e => inRange(e.date)).reduce((s,e) => s + (e.amount||0), 0);
+  const salTotal = salaryPayments.filter(p => inRange(p.date)).reduce((s,p) => s + (p.amount||0), 0);
+  const purTotal = purchases.filter(p => inRange(p.date)).reduce((s,p) => s + (p.amount||0), 0);
+  const totalCosts = expTotal + salTotal + purTotal;
+  const profit = revenue - totalCosts;
+  const margin = revenue > 0 ? ((profit / revenue) * 100).toFixed(1) : '0.0';
+
+  const fmt = n => '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+  const el = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  el('pnl-revenue', fmt(revenue));
+  el('pnl-costs', fmt(totalCosts));
+  el('pnl-profit', fmt(profit));
+  el('pnl-margin', margin + '% margin');
+  const profitEl = document.getElementById('pnl-profit');
+  if (profitEl) profitEl.style.color = profit >= 0 ? 'var(--green)' : 'var(--red)';
+  el('pnl-period', (from || to) ? `${from || '…'} → ${to || '…'}` : 'All time');
+
+  const tbody = document.getElementById('pnl-tbody');
+  if (tbody) {
+    tbody.innerHTML = `
+      <tr><td style="font-weight:700;color:var(--navy)">Revenue (Tax Invoices)</td><td class="amount-cell" style="color:var(--green)">+${fmt(revenue)}</td></tr>
+      <tr><td style="padding-left:28px;color:var(--gray600)">Expenses</td><td class="amount-cell" style="color:var(--red)">-${fmt(expTotal)}</td></tr>
+      <tr><td style="padding-left:28px;color:var(--gray600)">Salary Paid</td><td class="amount-cell" style="color:var(--red)">-${fmt(salTotal)}</td></tr>
+      <tr><td style="padding-left:28px;color:var(--gray600)">Purchases</td><td class="amount-cell" style="color:var(--red)">-${fmt(purTotal)}</td></tr>
+      <tr style="background:var(--navy)"><td style="color:var(--gold);font-weight:800;padding:12px 16px">NET PROFIT / LOSS</td><td style="color:white;font-weight:800;padding:12px 16px;text-align:right">${fmt(profit)}</td></tr>
+    `;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// CSV / EXCEL EXPORT
+// ═══════════════════════════════════════════════════════
+function downloadCSV(filename, headers, rows) {
+  const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const csv = [headers.map(esc).join(','), ...rows.map(r => r.map(esc).join(','))].join('\r\n');
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  toast('CSV downloaded! Open in Excel ✓', 'success');
+}
+
+function exportCurrentReportCSV() {
+  if (currentReportTab === 'ledger') {
+    const custFilter = document.getElementById('ledger-customer')?.value || '';
+    const fromDate = document.getElementById('ledger-from')?.value || '';
+    const toDate = document.getElementById('ledger-to')?.value || '';
+    let filtered = [...documents];
+    if (custFilter) filtered = filtered.filter(d => d.clientName === custFilter);
+    if (fromDate) filtered = filtered.filter(d => (d.date || '') >= fromDate);
+    if (toDate) filtered = filtered.filter(d => (d.date || '') <= toDate);
+    filtered.sort((a,b) => (a.date||'') < (b.date||'') ? -1 : 1);
+    let running = 0;
+    const rows = filtered.map(doc => { running += doc.grand||0; return [doc.date||'', doc.number||'', doc.type, doc.clientName||'', (doc.items||[]).map(i=>i.desc).join('; '), (doc.grand||0).toFixed(2), running.toFixed(2)]; });
+    downloadCSV('customer_ledger.csv', ['Date','Doc No.','Type','Customer','Description','Amount','Running Total'], rows);
+  } else if (currentReportTab === 'summary') {
+    const rows = Array.from(document.querySelectorAll('#summary-tbody tr')).map(tr => Array.from(tr.children).map(td => td.textContent));
+    downloadCSV('monthly_summary.csv', ['Month','Tax Invoices','Proforma','Quotations','Total Billed'], rows);
+  } else if (currentReportTab === 'expenses') {
+    const from = document.getElementById('rpt-exp-from')?.value || '';
+    const to = document.getElementById('rpt-exp-to')?.value || '';
+    let filtered = expenses;
+    if (from) filtered = filtered.filter(e => (e.date||'') >= from);
+    if (to) filtered = filtered.filter(e => (e.date||'') <= to);
+    const rows = filtered.map(e => [e.date||'', e.category||'', e.desc||'', (e.amount||0).toFixed(2)]);
+    downloadCSV('expense_report.csv', ['Date','Category','Description','Amount'], rows);
+  } else if (currentReportTab === 'pnl') {
+    const rows = Array.from(document.querySelectorAll('#pnl-tbody tr')).map(tr => Array.from(tr.children).map(td => td.textContent.replace(/^[+-]/,'')));
+    downloadCSV('profit_and_loss.csv', ['Line Item','Amount'], rows);
+  }
+}
 
 // ═══════════════════════════════════════════════════════
 // PURCHASES
@@ -2457,6 +2932,13 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('doc-date').valueAsDate = new Date();
   addItem();
   updateBankPreview();
+  if (localStorage.getItem('airdoor-dark-mode') === '1') document.body.classList.add('dark-mode');
+});
+
+document.addEventListener('keydown', e => {
+  const onNewPage = document.getElementById('page-new')?.classList.contains('active');
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's' && onNewPage) { e.preventDefault(); saveDraft(); }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && onNewPage) { e.preventDefault(); generateDoc(); }
 });
 
 document.getElementById('view-modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
