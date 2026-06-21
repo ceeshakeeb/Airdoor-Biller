@@ -402,7 +402,7 @@
     <div class="form-group" style="margin-bottom:18px"><label>Password</label><input type="password" id="auth-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')authSubmit()" /></div>
     <button class="btn btn-gold" style="width:100%;justify-content:center;padding:12px" onclick="authSubmit()" id="auth-submit-btn">Sign In</button>
     <div style="text-align:center;margin-top:14px;font-size:12px;color:var(--gray600)">
-      <span id="auth-toggle-text">New here?</span> <a href="#" onclick="toggleAuthMode();return false" id="auth-toggle-link" style="color:var(--blue);font-weight:700;text-decoration:none">Create an account</a>
+      Contact airdoor admin for register
     </div>
   </div>
 </div>
@@ -838,7 +838,10 @@
       </div>
 
       <div class="settings-card" id="user-management-card" style="display:none">
-        <h3>👤 User Management <span style="font-size:11px;font-weight:600;color:var(--gray400)">(Admin only)</span></h3>
+        <h3 style="display:flex;align-items:center;justify-content:space-between">
+          <span>👤 User Management <span style="font-size:11px;font-weight:600;color:var(--gray400)">(Admin only)</span></span>
+          <button class="btn btn-gold" style="padding:7px 14px;font-size:12px" onclick="openAddUserModal()">+ Add User</button>
+        </h3>
         <div style="margin-bottom:14px;font-size:13px;color:var(--gray600);line-height:1.6">Manage who can access this app and what they can do. Roles: <strong>Admin</strong> (full access incl. Settings), <strong>Accountant</strong> (all modules, no Settings), <strong>Viewer</strong> (read-only: Dashboard, Documents, Customers, Reports).</div>
         <div class="table-wrap" style="box-shadow:none">
           <table>
@@ -1327,6 +1330,28 @@
   </div>
 </div>
 
+<!-- ADD USER MODAL (Admin only) -->
+<div class="mini-modal-overlay" id="add-user-modal">
+  <div class="mini-modal">
+    <h3>➕ Add User</h3>
+    <div class="form-group" style="margin-bottom:14px"><label>Email</label><input type="email" id="new-user-email" placeholder="user@airdoor.com" /></div>
+    <div class="form-group" style="margin-bottom:14px"><label>Temporary Password</label><input type="text" id="new-user-password" placeholder="Min 6 characters" /></div>
+    <div class="form-group" style="margin-bottom:18px">
+      <label>Role</label>
+      <select id="new-user-role" style="width:100%">
+        <option value="viewer">Viewer</option>
+        <option value="accountant">Accountant</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+    <div id="add-user-error" style="display:none;background:#fdecea;color:var(--red);font-size:12px;padding:8px 12px;border-radius:8px;margin-bottom:14px"></div>
+    <div style="display:flex;justify-content:flex-end;gap:10px">
+      <button class="btn btn-outline" onclick="closeMiniModal('add-user-modal')">Cancel</button>
+      <button class="btn btn-gold" id="add-user-submit-btn" onclick="createUserAsAdmin()">Create User</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div id="toast">✓ Saved!</div>
 
@@ -1411,7 +1436,6 @@ function listenToData() {
 
 let currentUser = null;
 let currentRole = 'viewer'; // admin | accountant | viewer
-let authMode = 'signin';
 
 // Role permission map: which nav pages each role can see
 const ROLE_PAGES = {
@@ -1420,24 +1444,14 @@ const ROLE_PAGES = {
   viewer: ['dashboard','list','customers','reports']
 };
 
-function toggleAuthMode() {
-  authMode = authMode === 'signin' ? 'signup' : 'signin';
-  document.getElementById('auth-submit-btn').textContent = authMode === 'signin' ? 'Sign In' : 'Create Account';
-  document.getElementById('auth-toggle-text').textContent = authMode === 'signin' ? 'New here?' : 'Already have an account?';
-  document.getElementById('auth-toggle-link').textContent = authMode === 'signin' ? 'Create an account' : 'Sign in';
-  document.getElementById('auth-error').style.display = 'none';
-}
-
 function authSubmit() {
   const email = document.getElementById('auth-email').value.trim();
   const pass = document.getElementById('auth-password').value;
   const errEl = document.getElementById('auth-error');
   errEl.style.display = 'none';
   if (!email || !pass) { errEl.textContent = 'Email and password required'; errEl.style.display = 'block'; return; }
-  const action = authMode === 'signin'
-    ? auth.signInWithEmailAndPassword(email, pass)
-    : auth.createUserWithEmailAndPassword(email, pass);
-  action.catch(err => { errEl.textContent = err.message; errEl.style.display = 'block'; });
+  auth.signInWithEmailAndPassword(email, pass)
+    .catch(err => { errEl.textContent = err.message; errEl.style.display = 'block'; });
 }
 
 function logout() {
@@ -1445,16 +1459,25 @@ function logout() {
   auth.signOut();
 }
 
+// Permanent admin email — always resolves to admin regardless of stored role
+const PERMANENT_ADMIN_EMAIL = 'airdoor@outlook.com';
+
 async function resolveUserRole(user) {
   const ref = db.collection('users').doc(user.uid);
   const snap = await ref.get();
+  const isPermanentAdmin = (user.email || '').toLowerCase() === PERMANENT_ADMIN_EMAIL;
   if (snap.exists) {
-    currentUserDoc = snap.data();
-    return snap.data().role || 'viewer';
+    let data = snap.data();
+    if (isPermanentAdmin && data.role !== 'admin') {
+      data = { ...data, role: 'admin' };
+      await ref.set({ role: 'admin' }, { merge: true });
+    }
+    currentUserDoc = data;
+    return data.role || 'viewer';
   }
   // First-ever user becomes admin automatically; everyone after defaults to viewer (admin can promote later)
   const allUsers = await db.collection('users').limit(1).get();
-  const role = allUsers.empty ? 'admin' : 'viewer';
+  const role = isPermanentAdmin ? 'admin' : (allUsers.empty ? 'admin' : 'viewer');
   const data = { email: user.email, role, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
   await ref.set(data);
   currentUserDoc = data;
@@ -1557,6 +1580,46 @@ function renderUsersTable() {
 
 function setUserRole(uid, role) {
   db.collection('users').doc(uid).set({ role }, { merge: true }).then(() => toast('Role updated! ✓', 'success'));
+}
+
+function openAddUserModal() {
+  document.getElementById('new-user-email').value = '';
+  document.getElementById('new-user-password').value = '';
+  document.getElementById('new-user-role').value = 'viewer';
+  document.getElementById('add-user-error').style.display = 'none';
+  document.getElementById('add-user-modal').classList.add('open');
+}
+
+async function createUserAsAdmin() {
+  const email = document.getElementById('new-user-email').value.trim();
+  const pass = document.getElementById('new-user-password').value;
+  const role = document.getElementById('new-user-role').value;
+  const errEl = document.getElementById('add-user-error');
+  const btn = document.getElementById('add-user-submit-btn');
+  errEl.style.display = 'none';
+  if (!email || !pass) { errEl.textContent = 'Email and password required'; errEl.style.display = 'block'; return; }
+  if (pass.length < 6) { errEl.textContent = 'Password must be at least 6 characters'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Creating…';
+  // Use a secondary, isolated Firebase app instance so creating the new user
+  // does not sign the admin out of their own session.
+  const secondaryAppName = 'admin-create-user-' + Date.now();
+  const secondaryApp = firebase.initializeApp(firebaseConfig, secondaryAppName);
+  try {
+    const cred = await secondaryApp.auth().createUserWithEmailAndPassword(email, pass);
+    await db.collection('users').doc(cred.user.uid).set({
+      email, role, createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdBy: currentUser?.email || null
+    });
+    await secondaryApp.auth().signOut();
+    await secondaryApp.delete();
+    closeMiniModal('add-user-modal');
+    toast('User created! ✓', 'success');
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+    await secondaryApp.delete();
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create User';
+  }
 }
 
 function toggleDarkMode() {
@@ -1823,7 +1886,8 @@ function generateInvoiceHTML(doc) {
     </div>` : '';
 
   // Letterhead template: classic (slant banner) | modern (full bar) | minimal (underline only)
-  const template = s.invoiceTemplate || 'classic';
+  // Quotation always uses minimal (underline only), fixed — ignores settings template choice
+  const template = doc.type === 'Quotation' ? 'minimal' : (s.invoiceTemplate || 'classic');
   let headerBannerHTML;
   if (template === 'modern') {
     headerBannerHTML = `<div style="background:${PRIMARY};color:${ACCENT};padding:14px 32px;display:flex;align-items:center;justify-content:flex-end;flex:1;border-radius:0 0 0 24px">
@@ -1848,7 +1912,7 @@ function generateInvoiceHTML(doc) {
       <!-- HEADER ROW: Logo + Doc Type Label -->
       <div style="display:flex;justify-content:space-between;align-items:stretch;position:relative;flex-shrink:0">
         <div style="padding:14px 24px 8px 24px;display:flex;align-items:center;gap:14px">
-          ${s.logoDataUrl ? `<div style="display:flex;flex-direction:column;gap:2px"><img src="${s.logoDataUrl}" alt="Logo" style="max-height:59px;max-width:281px;object-fit:contain;display:block" /><div style="font-size:9px;color:#4A7FA7;letter-spacing:2px;font-weight:700;text-transform:uppercase;white-space:nowrap;margin-left:${s.logoTaglineOffset != null ? s.logoTaglineOffset : 38}px">MEP Solutions</div></div>` : `<div style="width:44px;height:44px;background:${PRIMARY};border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:700;color:${ACCENT}">A</div><div style="display:flex;flex-direction:column;gap:1px"><div style="font-size:29px;font-weight:800;color:${PRIMARY};letter-spacing:1px;line-height:1">airdoor</div><div style="font-size:9px;color:#4A7FA7;letter-spacing:${taglineSpacingLg};font-weight:600;text-transform:uppercase;white-space:nowrap">MEP Solutions</div></div>`}
+          ${s.logoDataUrl ? `<div style="display:flex;flex-direction:column;align-items:center;gap:2px"><img src="${s.logoDataUrl}" alt="Logo" style="max-height:59px;max-width:281px;object-fit:contain;display:block" /><div style="font-size:9px;color:#4A7FA7;letter-spacing:2px;font-weight:700;text-transform:uppercase;white-space:nowrap;text-align:center">MEP Solutions</div></div>` : `<div style="width:44px;height:44px;background:${PRIMARY};border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:700;color:${ACCENT}">A</div><div style="display:flex;flex-direction:column;align-items:center;gap:1px"><div style="font-size:29px;font-weight:800;color:${PRIMARY};letter-spacing:1px;line-height:1">airdoor</div><div style="font-size:9px;color:#4A7FA7;letter-spacing:${taglineSpacingLg};font-weight:600;text-transform:uppercase;white-space:nowrap">MEP Solutions</div></div>`}
         </div>
         ${headerBannerHTML}
       </div>
