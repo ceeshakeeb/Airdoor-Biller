@@ -81,6 +81,7 @@
   }
   .logo-text { color: white; font-family: 'Playfair Display', serif; font-size: 20px; letter-spacing: 1px; }
   .topbar-actions { display: flex; gap: 10px; align-items: center; }
+  .hamburger-item:hover { background: var(--gray50); }
   .btn {
     padding: 8px 16px;
     border-radius: 8px;
@@ -184,6 +185,19 @@
   body.dark-mode input, body.dark-mode select, body.dark-mode textarea { background: var(--gray100); color: var(--gray800); border-color: var(--gray200); }
   body.dark-mode td { color: var(--gray800); border-color: var(--gray100); }
   body.dark-mode .empty-state { color: var(--gray400); }
+
+  /* ── PRINT STYLES ── */
+  @media print {
+    .topbar, .sidebar, .section-header button, .report-tab, #auth-overlay,
+    .mini-modal-overlay, .modal-overlay, #toast, .btn { display: none !important; }
+    .content { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+    .page { display: none !important; }
+    .page.active { display: block !important; }
+    .report-panel { display: none !important; }
+    .report-panel.print-active { display: block !important; }
+    body { background: white !important; }
+    .table-wrap { box-shadow: none !important; border: 1px solid #ccc !important; }
+  }
   .stat-label { font-size: 12px; font-weight: 700; color: var(--gray400); text-transform: uppercase; letter-spacing: 1px; }
   .stat-value { font-size: 28px; font-weight: 700; margin-top: 8px; font-family: 'DM Sans', sans-serif; color: var(--navy); }
   .stat-sub { font-size: 12px; color: var(--gray400); margin-top: 4px; }
@@ -401,17 +415,22 @@
     </div>
     <div>
       <div class="logo-text" id="topbar-logo-text">AIRDOOR</div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.85);margin-top:2px;letter-spacing:0.5px">Airconditioning Solutions</div>
     </div>
   </div>
   <div class="topbar-actions">
     <button class="btn btn-ghost" id="darkmode-toggle" onclick="toggleDarkMode()" title="Toggle dark mode">🌙</button>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;margin-right:4px">
-      <span id="user-email-label" style="color:white;font-size:11px;font-weight:600"></span>
-      <span id="user-role-badge" style="background:var(--gold-light);color:var(--gold-text);font-size:9px;font-weight:800;letter-spacing:1px;padding:1px 8px;border-radius:99px;margin-top:2px">VIEWER</span>
+    <div style="position:relative">
+      <button class="btn btn-ghost" onclick="toggleHamburgerMenu()" title="Menu" id="hamburger-btn">☰</button>
+      <div id="hamburger-dropdown" style="display:none;position:absolute;top:48px;right:0;background:var(--white);border-radius:10px;box-shadow:var(--shadow-lg);min-width:220px;z-index:200;overflow:hidden">
+        <div style="padding:14px 16px;border-bottom:1px solid var(--gray200)">
+          <div id="user-email-label" style="font-size:13px;font-weight:700;color:var(--navy)"></div>
+          <span id="user-role-badge" style="background:var(--gold-light);color:var(--gold-text);font-size:9px;font-weight:800;letter-spacing:1px;padding:1px 8px;border-radius:99px;margin-top:4px;display:inline-block">VIEWER</span>
+        </div>
+        <div class="hamburger-item" onclick="openProfileModal()" style="padding:12px 16px;cursor:pointer;font-size:13px;color:var(--gray800);display:flex;align-items:center;gap:8px">👤 Profile</div>
+        <div class="hamburger-item" onclick="closeHamburgerMenu();showPage('settings')" style="padding:12px 16px;cursor:pointer;font-size:13px;color:var(--gray800);display:flex;align-items:center;gap:8px">⚙️ Settings</div>
+        <div class="hamburger-item" onclick="logout()" style="padding:12px 16px;cursor:pointer;font-size:13px;color:var(--red);display:flex;align-items:center;gap:8px;border-top:1px solid var(--gray200)">🚪 Sign Out</div>
+      </div>
     </div>
-    <button class="btn btn-ghost" onclick="logout()" title="Sign out">🚪</button>
-    <button class="btn btn-ghost" onclick="showPage('settings')">⚙️ Settings</button>
     <button class="btn btn-gold" onclick="showPage('new')">＋ New Document</button>
   </div>
 </div>
@@ -550,6 +569,12 @@
           <div class="form-group" style="flex:1">
             <label>PO No.</label>
             <input type="text" id="doc-po" placeholder="Optional" />
+          </div>
+          <div class="form-group" style="flex:1" id="against-proforma-wrap">
+            <label>Against Proforma <span style="font-size:10px;color:var(--gray400);text-transform:none;font-weight:400">(if converting)</span></label>
+            <select id="doc-against-proforma" onchange="autofillFromProforma()">
+              <option value="">— None —</option>
+            </select>
           </div>
         </div>
       </div>
@@ -698,7 +723,7 @@
       <div class="settings-card">
         <h3>🏢 Company Information</h3>
         <div class="form-grid">
-          <div class="form-group"><label>Company Name</label><input type="text" id="s-company" value="Airdoor Airconditioning Solutions" onchange="updateMainHeader()"/></div>
+          <div class="form-group"><label>Company Name</label><input type="text" id="s-company" oninput="document.getElementById('topbar-logo-text').textContent = this.value || 'AIRDOOR'"/></div>
           <div class="form-group"><label>GST No. / GSTIN</label><input type="text" id="s-gst" placeholder="Your GST number" style="text-transform:uppercase" /></div>
           <div class="form-group full"><label>Registered Address (Invoice Header)</label><textarea id="s-address" rows="2">First Floor Building No 11/540 GandhiNagar Road Pallilamkara, North Kalamassery. Kalamassery PO. 683503, Ernakulam, Kerala</textarea></div>
           <div class="form-group"><label>Email</label><input type="email" id="s-email" value="Airdoor@outlook.com" /></div>
@@ -750,6 +775,21 @@
               <button class="btn btn-outline" onclick="removeLogo()">🗑 Remove Logo</button>
             </div>
             <div style="margin-top:12px;font-size:12px;color:var(--gray600)">💡 Tip: A transparent background logo works best. File will be encoded as Base64.</div>
+            <div class="form-group" style="margin-top:16px">
+              <label>"MEP Solutions" Tagline Position <span style="font-size:10px;color:var(--gray400);text-transform:none;font-weight:400">(nudge so it lines up under the "a" in your logo)</span></label>
+              <div style="display:flex;align-items:center;gap:12px">
+                <input type="range" id="s-logo-tagline-offset" min="0" max="120" value="38" oninput="document.getElementById('tagline-offset-val').textContent = this.value + 'px'; previewTaglineOffset(this.value)" style="flex:1" />
+                <span id="tagline-offset-val" style="font-size:12px;font-weight:700;color:var(--navy);min-width:42px">38px</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:16px;border-top:1px solid var(--gray200);padding-top:16px">
+          <div style="font-size:12px;color:var(--gray600);margin-bottom:8px;font-weight:600">Live Preview</div>
+          <div style="display:flex;flex-direction:column;gap:2px;background:#fafcff;border:1px solid var(--gray200);border-radius:8px;padding:14px;width:fit-content">
+            <img id="tagline-preview-logo" src="" alt="" style="max-height:50px;max-width:240px;object-fit:contain;display:none" />
+            <div id="tagline-preview-placeholder" style="font-size:25px;font-weight:800;color:var(--cello);letter-spacing:1px;line-height:1">airdoor</div>
+            <div id="tagline-preview-text" style="font-size:9px;color:#4A7FA7;letter-spacing:2px;font-weight:700;text-transform:uppercase;white-space:nowrap;margin-left:38px">MEP Solutions</div>
           </div>
         </div>
       </div>
@@ -924,9 +964,18 @@
         </div>
         <div class="table-wrap" id="ledger-table-wrap">
           <table>
-            <thead><tr><th>Date</th><th>Doc No.</th><th>Type</th><th>Customer</th><th>Description</th><th>Amount</th><th>Running Total</th></tr></thead>
+            <thead><tr><th>Date</th><th>Doc No.</th><th>Type</th><th>Customer</th><th>Against Proforma</th><th>Taxable Value</th><th>Tax</th><th>Total Amount</th><th>Payment Received</th><th>Balance</th></tr></thead>
             <tbody id="ledger-tbody"></tbody>
-            <tfoot><tr style="background:var(--navy)"><td colspan="5" style="color:var(--gold);font-weight:700;padding:12px 16px">TOTAL</td><td style="color:white;font-weight:700;padding:12px 16px;text-align:right" id="ledger-total-amt"></td><td></td></tr></tfoot>
+            <tfoot>
+              <tr style="background:var(--navy)">
+                <td colspan="5" style="color:var(--gold);font-weight:700;padding:12px 16px">TOTAL (Tax Invoices only)</td>
+                <td style="color:white;font-weight:700;padding:12px 16px;text-align:right" id="ledger-total-taxable"></td>
+                <td style="color:white;font-weight:700;padding:12px 16px;text-align:right" id="ledger-total-tax"></td>
+                <td style="color:white;font-weight:700;padding:12px 16px;text-align:right" id="ledger-total-amt"></td>
+                <td style="color:white;font-weight:700;padding:12px 16px;text-align:right" id="ledger-total-received"></td>
+                <td style="color:var(--gold);font-weight:700;padding:12px 16px;text-align:right" id="ledger-total-balance"></td>
+              </tr>
+            </tfoot>
           </table>
         </div>
       </div>
@@ -1241,6 +1290,43 @@
   </div>
 </div>
 
+<!-- PROFILE MODAL -->
+<div class="mini-modal-overlay" id="profile-modal">
+  <div class="mini-modal">
+    <h3>👤 My Profile</h3>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;background:var(--gray50);border-radius:10px;padding:14px 16px">
+      <div style="width:44px;height:44px;border-radius:50%;background:var(--cello);color:white;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px" id="profile-avatar-initial">?</div>
+      <div>
+        <div id="profile-email-display" style="font-weight:700;color:var(--navy);font-size:14px"></div>
+        <span id="profile-role-display" style="background:var(--gold-light);color:var(--gold-text);font-size:9px;font-weight:800;letter-spacing:1px;padding:1px 8px;border-radius:99px">VIEWER</span>
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Display Name <span style="font-size:10px;color:var(--gray400);text-transform:none;font-weight:400">(shown instead of email in the header)</span></label>
+      <input type="text" id="profile-display-name" placeholder="e.g. Akshay K." />
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:24px">
+      <button class="btn btn-gold" onclick="saveProfileName()">💾 Save Name</button>
+    </div>
+
+    <div style="border-top:1px solid var(--gray200);padding-top:18px">
+      <div style="font-weight:700;color:var(--navy);font-size:13px;margin-bottom:12px">🔒 Change Password</div>
+      <div class="form-group" style="margin-bottom:12px"><label>Current Password</label><input type="password" id="profile-current-pass" placeholder="Required to confirm it's you" /></div>
+      <div class="form-group" style="margin-bottom:12px"><label>New Password</label><input type="password" id="profile-new-pass" placeholder="Min 6 characters" /></div>
+      <div class="form-group" style="margin-bottom:16px"><label>Confirm New Password</label><input type="password" id="profile-confirm-pass" placeholder="Re-type new password" /></div>
+      <div id="profile-pass-error" style="display:none;background:#fdecea;color:var(--red);font-size:12px;padding:8px 12px;border-radius:8px;margin-bottom:12px"></div>
+      <div style="display:flex;justify-content:flex-end">
+        <button class="btn btn-blue" onclick="changeMyPassword()">🔑 Update Password</button>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;margin-top:20px;border-top:1px solid var(--gray200);padding-top:16px">
+      <button class="btn btn-outline" onclick="closeMiniModal('profile-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div id="toast">✓ Saved!</div>
 
@@ -1288,7 +1374,8 @@ let settings = {
   taxNext: 1,
   proNext: 1,
   quotNext: 1,
-  invoiceTemplate: 'classic'
+  invoiceTemplate: 'classic',
+  logoTaglineOffset: 38
 };
 
 let currentDocType = 'Tax Invoice';
@@ -1362,14 +1449,19 @@ async function resolveUserRole(user) {
   const ref = db.collection('users').doc(user.uid);
   const snap = await ref.get();
   if (snap.exists) {
+    currentUserDoc = snap.data();
     return snap.data().role || 'viewer';
   }
   // First-ever user becomes admin automatically; everyone after defaults to viewer (admin can promote later)
   const allUsers = await db.collection('users').limit(1).get();
   const role = allUsers.empty ? 'admin' : 'viewer';
-  await ref.set({ email: user.email, role, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  const data = { email: user.email, role, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+  await ref.set(data);
+  currentUserDoc = data;
   return role;
 }
+
+let currentUserDoc = null;
 
 function applyRoleToUI() {
   const allowed = ROLE_PAGES[currentRole] || ROLE_PAGES.viewer;
@@ -1383,10 +1475,61 @@ function applyRoleToUI() {
   const roleBadge = document.getElementById('user-role-badge');
   if (roleBadge) roleBadge.textContent = currentRole.toUpperCase();
   const userEmailEl = document.getElementById('user-email-label');
-  if (userEmailEl && currentUser) userEmailEl.textContent = currentUser.email;
+  if (userEmailEl && currentUser) userEmailEl.textContent = (currentUserDoc && currentUserDoc.displayName) || currentUser.email;
   const umCard = document.getElementById('user-management-card');
   if (umCard) umCard.style.display = currentRole === 'admin' ? 'block' : 'none';
   if (currentRole === 'admin') listenToUsers();
+}
+
+function toggleHamburgerMenu() {
+  const dd = document.getElementById('hamburger-dropdown');
+  dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+}
+function closeHamburgerMenu() { document.getElementById('hamburger-dropdown').style.display = 'none'; }
+document.addEventListener('click', e => {
+  const dd = document.getElementById('hamburger-dropdown');
+  const btn = document.getElementById('hamburger-btn');
+  if (dd && dd.style.display === 'block' && !dd.contains(e.target) && e.target !== btn) dd.style.display = 'none';
+});
+
+function openProfileModal() {
+  closeHamburgerMenu();
+  if (!currentUser) return;
+  document.getElementById('profile-email-display').textContent = currentUser.email;
+  document.getElementById('profile-role-display').textContent = currentRole.toUpperCase();
+  document.getElementById('profile-avatar-initial').textContent = (currentUser.email || '?').charAt(0).toUpperCase();
+  document.getElementById('profile-display-name').value = (currentUserDoc && currentUserDoc.displayName) || '';
+  document.getElementById('profile-current-pass').value = '';
+  document.getElementById('profile-new-pass').value = '';
+  document.getElementById('profile-confirm-pass').value = '';
+  document.getElementById('profile-pass-error').style.display = 'none';
+  document.getElementById('profile-modal').classList.add('open');
+}
+
+function saveProfileName() {
+  const name = document.getElementById('profile-display-name').value.trim();
+  db.collection('users').doc(currentUser.uid).set({ displayName: name }, { merge: true }).then(() => {
+    currentUserDoc = currentUserDoc || {};
+    currentUserDoc.displayName = name;
+    applyRoleToUI();
+    toast('Display name updated! ✓', 'success');
+  }).catch(err => toast('Failed: ' + err.message, 'error'));
+}
+
+function changeMyPassword() {
+  const curPass = document.getElementById('profile-current-pass').value;
+  const newPass = document.getElementById('profile-new-pass').value;
+  const confirmPass = document.getElementById('profile-confirm-pass').value;
+  const errEl = document.getElementById('profile-pass-error');
+  errEl.style.display = 'none';
+  if (!curPass || !newPass || !confirmPass) { errEl.textContent = 'All password fields are required'; errEl.style.display = 'block'; return; }
+  if (newPass.length < 6) { errEl.textContent = 'New password must be at least 6 characters'; errEl.style.display = 'block'; return; }
+  if (newPass !== confirmPass) { errEl.textContent = 'New passwords do not match'; errEl.style.display = 'block'; return; }
+  const cred = firebase.auth.EmailAuthProvider.credential(currentUser.email, curPass);
+  currentUser.reauthenticateWithCredential(cred)
+    .then(() => currentUser.updatePassword(newPass))
+    .then(() => { closeMiniModal('profile-modal'); toast('Password updated! ✓', 'success'); })
+    .catch(err => { errEl.textContent = err.message; errEl.style.display = 'block'; });
 }
 
 let appUsers = [];
@@ -1463,7 +1606,36 @@ function selectType(type) {
   document.getElementById('cgst-row').style.display = showTax ? '' : 'none';
   document.getElementById('sgst-row').style.display = showTax ? '' : 'none';
   document.getElementById('igst-row').style.display = 'none';
+  document.getElementById('against-proforma-wrap').style.display = type === 'Tax Invoice' ? '' : 'none';
+  if (type === 'Tax Invoice') populateProformaDropdown();
   calcTotals();
+}
+
+function populateProformaDropdown() {
+  const sel = document.getElementById('doc-against-proforma');
+  if (!sel) return;
+  const current = sel.value;
+  const proformas = documents.filter(d => d.type === 'Proforma Invoice' && d.status !== 'draft');
+  sel.innerHTML = '<option value="">— None —</option>' + proformas.map(d => `<option value="${d.number}">${d.number} — ${d.clientName} (₹${Number(d.grand||0).toLocaleString('en-IN',{maximumFractionDigits:0})})</option>`).join('');
+  sel.value = current;
+}
+
+function autofillFromProforma() {
+  const num = document.getElementById('doc-against-proforma').value;
+  if (!num) return;
+  const proforma = documents.find(d => d.number === num && d.type === 'Proforma Invoice');
+  if (!proforma || !confirm('Copy client details and items from this Proforma into the current Tax Invoice?')) return;
+  document.getElementById('client-name').value = proforma.clientName || '';
+  document.getElementById('client-gst').value = proforma.clientGST || '';
+  document.getElementById('client-address').value = proforma.clientAddress || '';
+  document.getElementById('client-city').value = proforma.clientCity || '';
+  document.getElementById('client-contact').value = proforma.clientContact || '';
+  document.getElementById('doc-worksite').value = proforma.worksite || '';
+  document.getElementById('items-container').innerHTML = '';
+  (proforma.items || []).forEach(item => addItem(item.desc, item.qty, item.unit, item.rate, item.amount));
+  if (!proforma.items || !proforma.items.length) addItem();
+  calcTotals();
+  toast('Copied from Proforma ✓', 'success');
 }
 
 function autoNumber() {
@@ -1575,7 +1747,9 @@ function collectFormData() {
 
   return {
     id: Date.now().toString(), type: currentDocType, number: document.getElementById('doc-number').value, date: document.getElementById('doc-date').value,
-    jobNo: document.getElementById('doc-job').value, poNo: document.getElementById('doc-po').value, clientName: document.getElementById('client-name').value,
+    jobNo: document.getElementById('doc-job').value, poNo: document.getElementById('doc-po').value,
+    againstProforma: document.getElementById('doc-against-proforma') ? document.getElementById('doc-against-proforma').value : '',
+    clientName: document.getElementById('client-name').value,
     clientGST: document.getElementById('client-gst').value, clientAddress: document.getElementById('client-address').value, clientCity: document.getElementById('client-city').value,
     clientContact: document.getElementById('client-contact').value, worksite: document.getElementById('doc-worksite').value, terms: document.getElementById('doc-terms').value,
     paymentTerms: document.getElementById('doc-payment-terms').value,
@@ -1590,6 +1764,25 @@ function collectFormData() {
 // HTML INVOICE GENERATION (Strict White / San Marino & Porcelain Accents)
 // ═══════════════════════════════════════════════════════
 function generateInvoiceHTML(doc) {
+  let _measureCanvas;
+  function getTextWidth(text, font) {
+    if (!_measureCanvas) _measureCanvas = document.createElement('canvas');
+    const ctx = _measureCanvas.getContext('2d');
+    ctx.font = font;
+    return ctx.measureText(text).width;
+  }
+  function matchedTagline(wordmarkText, wordmarkFontPx, taglineText) {
+    const wordmarkFont = `800 ${wordmarkFontPx}px 'DM Sans', sans-serif`;
+    const wordmarkWidth = getTextWidth(wordmarkText, wordmarkFont);
+    const taglineUpper = taglineText.toUpperCase();
+    const baseFont = `600 9px 'DM Sans', sans-serif`;
+    const baseWidth = getTextWidth(taglineUpper, baseFont);
+    const n = taglineUpper.length;
+    const spacing = n > 1 ? Math.max(0.5, (wordmarkWidth - baseWidth) / (n - 1)) : 0;
+    return spacing.toFixed(2) + 'px';
+  }
+  const taglineSpacingLg = matchedTagline('airdoor', 29, 'MEP Solutions');
+  const taglineSpacingSm = matchedTagline('airdoor', 25, 'MEP Solutions');
   const s = doc.settings || settings;
   const fmt = n => '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2 });
   const dateStr = doc.date ? new Date(doc.date).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : '';
@@ -1611,6 +1804,7 @@ function generateInvoiceHTML(doc) {
   }).join('');
   const gstLine = s.gst ? `<div style="margin-top:3px;font-size:11px;color:#475569"><strong>GST:</strong> ${s.gst}</div>` : '';
   const docLabel = doc.type === 'Tax Invoice' ? 'TAX INVOICE' : doc.type === 'Proforma Invoice' ? 'PROFORMA' : doc.type === 'Invoice' ? 'INVOICE' : 'QUOTATION';
+  const numLabel = doc.type === 'Tax Invoice' ? 'Invoice No.' : doc.type === 'Proforma Invoice' ? 'Proforma No.' : doc.type === 'Invoice' ? 'Invoice No.' : 'Quotation No.';
   
   const PRIMARY = '#1A3D63';
   const PRIMARY_DARK = '#0A1931';
@@ -1654,7 +1848,7 @@ function generateInvoiceHTML(doc) {
       <!-- HEADER ROW: Logo + Doc Type Label -->
       <div style="display:flex;justify-content:space-between;align-items:stretch;position:relative;flex-shrink:0">
         <div style="padding:14px 24px 8px 24px;display:flex;align-items:center;gap:14px">
-          ${s.logoDataUrl ? `<div style="display:flex;flex-direction:column;gap:1px"><img src="${s.logoDataUrl}" alt="Logo" style="max-height:49px;max-width:234px;object-fit:contain;display:block" /><div style="font-size:9px;color:#4A7FA7;letter-spacing:2px;font-weight:600;text-transform:uppercase;margin-left:2px">MEP Solutions</div></div>` : `<div style="width:44px;height:44px;background:${PRIMARY};border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:700;color:${ACCENT}">A</div><div style="display:flex;flex-direction:column;gap:1px"><div style="font-size:29px;font-weight:800;color:${PRIMARY};letter-spacing:1px;line-height:1">airdoor</div><div style="font-size:9px;color:#4A7FA7;letter-spacing:2px;font-weight:600;text-transform:uppercase">MEP Solutions</div></div>`}
+          ${s.logoDataUrl ? `<div style="display:flex;flex-direction:column;gap:2px"><img src="${s.logoDataUrl}" alt="Logo" style="max-height:59px;max-width:281px;object-fit:contain;display:block" /><div style="font-size:9px;color:#4A7FA7;letter-spacing:2px;font-weight:700;text-transform:uppercase;white-space:nowrap;margin-left:${s.logoTaglineOffset != null ? s.logoTaglineOffset : 38}px">MEP Solutions</div></div>` : `<div style="width:44px;height:44px;background:${PRIMARY};border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:700;color:${ACCENT}">A</div><div style="display:flex;flex-direction:column;gap:1px"><div style="font-size:29px;font-weight:800;color:${PRIMARY};letter-spacing:1px;line-height:1">airdoor</div><div style="font-size:9px;color:#4A7FA7;letter-spacing:${taglineSpacingLg};font-weight:600;text-transform:uppercase;white-space:nowrap">MEP Solutions</div></div>`}
         </div>
         ${headerBannerHTML}
       </div>
@@ -1664,11 +1858,12 @@ function generateInvoiceHTML(doc) {
         <div style="font-size:11px;color:#475569;line-height:1.8"><div>${s.address}</div><div>${s.phone}</div><div>${s.email}</div>${gstLine}</div>
         <div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px 18px;min-width:230px;background:${ACCENT}">
           <table style="width:100%;border-collapse:collapse;font-size:12px;color:#1e293b">
-            ${doc.number ? `<tr><td style="font-weight:700;color:${PRIMARY};padding:2px 0">Invoice No.</td><td style="padding:2px 0 2px 10px">:</td><td style="padding:2px 0 2px 8px;font-weight:600">${doc.number}</td></tr>` : ''}
+            ${doc.number ? `<tr><td style="font-weight:700;color:${PRIMARY};padding:2px 0">${numLabel}</td><td style="padding:2px 0 2px 10px">:</td><td style="padding:2px 0 2px 8px;font-weight:600">${doc.number}</td></tr>` : ''}
             ${doc.date ? `<tr><td style="font-weight:700;color:${PRIMARY};padding:2px 0">Date</td><td style="padding:2px 0 2px 10px">:</td><td style="padding:2px 0 2px 8px">${dateStr}</td></tr>` : ''}
             ${doc.terms ? `<tr><td style="font-weight:700;color:${PRIMARY};padding:2px 0">Terms</td><td style="padding:2px 0 2px 10px">:</td><td style="padding:2px 0 2px 8px">${doc.terms}</td></tr>` : ''}
             ${doc.jobNo ? `<tr><td style="font-weight:700;color:${PRIMARY};padding:2px 0">Job No.</td><td style="padding:2px 0 2px 10px">:</td><td style="padding:2px 0 2px 8px">${doc.jobNo}</td></tr>` : ''}
             ${doc.poNo ? `<tr><td style="font-weight:700;color:${PRIMARY};padding:2px 0">PO No.</td><td style="padding:2px 0 2px 10px">:</td><td style="padding:2px 0 2px 8px">${doc.poNo}</td></tr>` : ''}
+            ${doc.againstProforma ? `<tr><td style="font-weight:700;color:${PRIMARY};padding:2px 0">Against Proforma</td><td style="padding:2px 0 2px 10px">:</td><td style="padding:2px 0 2px 8px">${doc.againstProforma}</td></tr>` : ''}
           </table>
         </div>
       </div>
@@ -1798,6 +1993,7 @@ function editDraft(id) {
   document.getElementById('doc-date').value = doc.date || '';
   document.getElementById('doc-job').value = doc.jobNo || '';
   document.getElementById('doc-po').value = doc.poNo || '';
+  if (doc.type === 'Tax Invoice') { populateProformaDropdown(); document.getElementById('doc-against-proforma').value = doc.againstProforma || ''; }
   document.getElementById('client-name').value = doc.clientName || '';
   document.getElementById('client-gst').value = doc.clientGST || '';
   document.getElementById('client-address').value = doc.clientAddress || '';
@@ -2070,11 +2266,8 @@ function restoreFromJSON(e) {
 }
 
 function updateMainHeader() {
-  const companyNameInput = document.getElementById('s-company');
   const topbarText = document.getElementById('topbar-logo-text');
-  if(companyNameInput && topbarText) {
-    topbarText.textContent = companyNameInput.value || 'AIRDOOR';
-  }
+  if (topbarText) topbarText.textContent = (settings.company && settings.company.trim()) || 'AIRDOOR';
 }
 
 function loadSettings() {
@@ -2093,6 +2286,9 @@ function loadSettings() {
     if (topbarLogoImg) topbarLogoImg.style.display = 'none';
     if (topbarLogoPlate) topbarLogoPlate.style.display = 'none';
   }
+  document.getElementById('s-logo-tagline-offset').value = settings.logoTaglineOffset != null ? settings.logoTaglineOffset : 38;
+  document.getElementById('tagline-offset-val').textContent = (settings.logoTaglineOffset != null ? settings.logoTaglineOffset : 38) + 'px';
+  previewTaglineOffset(settings.logoTaglineOffset != null ? settings.logoTaglineOffset : 38);
   document.getElementById('s-company').value = settings.company || '';
   document.getElementById('s-gst').value = settings.gst || '';
   document.getElementById('s-address').value = settings.address || '';
@@ -2180,9 +2376,24 @@ function saveSettings() {
     taxPrefix: document.getElementById('s-tax-prefix').value,
     proPrefix: document.getElementById('s-pro-prefix').value, quotPrefix: document.getElementById('s-quot-prefix').value,
     taxNext: parseInt(document.getElementById('s-tax-next').value) || 1, proNext: parseInt(document.getElementById('s-pro-next').value) || 1, quotNext: parseInt(document.getElementById('s-quot-next').value) || 1,
-    invoiceTemplate: document.getElementById('s-invoice-template').value || 'classic'
+    invoiceTemplate: document.getElementById('s-invoice-template').value || 'classic',
+    logoTaglineOffset: parseInt(document.getElementById('s-logo-tagline-offset').value) || 0
   };
   SETTINGS_REF.set(updated, { merge: true }).then(() => { updateBankPreview(); toast('Settings saved! ✓', 'success'); }).catch(err => toast('Save failed', 'error'));
+}
+
+function previewTaglineOffset(val) {
+  const taglineEl = document.getElementById('tagline-preview-text');
+  const logoEl = document.getElementById('tagline-preview-logo');
+  const placeholderEl = document.getElementById('tagline-preview-placeholder');
+  if (taglineEl) taglineEl.style.marginLeft = val + 'px';
+  if (settings.logoDataUrl) {
+    if (logoEl) { logoEl.src = settings.logoDataUrl; logoEl.style.display = 'block'; }
+    if (placeholderEl) placeholderEl.style.display = 'none';
+  } else {
+    if (logoEl) logoEl.style.display = 'none';
+    if (placeholderEl) placeholderEl.style.display = 'block';
+  }
 }
 
 function resetForm() {
@@ -2442,31 +2653,82 @@ function renderLedger() {
   const custFilter = document.getElementById('ledger-customer')?.value || '';
   const fromDate = document.getElementById('ledger-from')?.value || '';
   const toDate = document.getElementById('ledger-to')?.value || '';
-  let filtered = [...documents];
-  if (custFilter) filtered = filtered.filter(d => d.clientName === custFilter);
-  if (fromDate) filtered = filtered.filter(d => (d.date || '') >= fromDate);
-  if (toDate) filtered = filtered.filter(d => (d.date || '') <= toDate);
-  filtered.sort((a,b) => (a.date||'') < (b.date||'') ? -1 : 1);
+  let filteredDocs = documents.filter(d => d.status !== 'draft');
+  if (custFilter) filteredDocs = filteredDocs.filter(d => d.clientName === custFilter);
+  if (fromDate) filteredDocs = filteredDocs.filter(d => (d.date || '') >= fromDate);
+  if (toDate) filteredDocs = filteredDocs.filter(d => (d.date || '') <= toDate);
+
+  let filteredPayments = [...payments];
+  if (custFilter) filteredPayments = filteredPayments.filter(p => p.customer === custFilter);
+  if (fromDate) filteredPayments = filteredPayments.filter(p => (p.date || '') >= fromDate);
+  if (toDate) filteredPayments = filteredPayments.filter(p => (p.date || '') <= toDate);
+
   const tbody = document.getElementById('ledger-tbody');
   if (!tbody) return;
-  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📒</div><h3>No documents found</h3></div></td></tr>'; document.getElementById('ledger-total-amt').textContent = '₹0.00'; return; }
-  let running = 0;
-  tbody.innerHTML = filtered.map(doc => {
-    running += doc.grand || 0;
+
+  // Merge documents + payments into one chronological feed
+  const rows = [
+    ...filteredDocs.map(d => ({ kind: 'doc', date: d.date, doc: d })),
+    ...filteredPayments.map(p => ({ kind: 'payment', date: p.date, payment: p }))
+  ].sort((a, b) => (a.date || '') < (b.date || '') ? -1 : 1);
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📒</div><h3>No records found</h3></div></td></tr>';
+    ['ledger-total-taxable','ledger-total-tax','ledger-total-amt','ledger-total-received','ledger-total-balance'].forEach(id => document.getElementById(id).textContent = '₹0.00');
+    return;
+  }
+
+  const fmt = n => '₹' + Number(n||0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+  let totalTaxable = 0, totalTax = 0, totalAmount = 0, totalReceived = 0;
+  let runningBalance = 0;
+
+  tbody.innerHTML = rows.map(r => {
+    if (r.kind === 'payment') {
+      const p = r.payment;
+      totalReceived += p.amount || 0;
+      runningBalance -= (p.amount || 0);
+      const dateStr = p.date ? new Date(p.date).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+      return `<tr style="background:#f0fdf4">
+        <td style="font-size:13px">${dateStr}</td>
+        <td style="font-weight:600;font-size:12px">${p.ref || '—'}</td>
+        <td><span class="doc-type" style="background:#dcfce7;color:var(--green)">PAYMENT</span></td>
+        <td style="font-weight:600;color:var(--navy)">${p.customer||'—'}</td>
+        <td style="font-size:11px;color:var(--gray400)">—</td>
+        <td style="font-size:12px;color:var(--gray400)">—</td>
+        <td style="font-size:12px;color:var(--gray400)">—</td>
+        <td style="font-size:12px;color:var(--gray400)">—</td>
+        <td class="amount-cell" style="color:var(--green)">+${fmt(p.amount)}</td>
+        <td style="font-size:12px;font-weight:600;color:${runningBalance>=0?'var(--red)':'var(--green)'}">${fmt(Math.abs(runningBalance))} ${runningBalance>=0?'Dr':'Cr'}</td>
+      </tr>`;
+    }
+    const doc = r.doc;
     const dateStr = doc.date ? new Date(doc.date).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—';
     const typeClass = doc.type === 'Tax Invoice' ? 'type-tax' : doc.type === 'Proforma Invoice' ? 'type-proforma' : 'type-quotation';
-    const desc = (doc.items || []).map(i => i.desc).filter(Boolean).slice(0,2).join(', ');
+    const isTaxInvoice = doc.type === 'Tax Invoice';
+    const taxable = doc.subtotal || 0;
+    const tax = (doc.cgst||0) + (doc.sgst||0) + (doc.igst||0);
+    const total = doc.grand || 0;
+    if (isTaxInvoice) { totalTaxable += taxable; totalTax += tax; totalAmount += total; runningBalance += total; }
+    const fadedStyle = isTaxInvoice ? '' : 'color:var(--gray400)';
     return `<tr>
       <td style="font-size:13px">${dateStr}</td>
       <td style="font-weight:600;font-size:12px">${doc.number||'—'}</td>
       <td><span class="doc-type ${typeClass}">${doc.type}</span></td>
       <td style="font-weight:600;color:var(--navy)">${doc.clientName||'—'}</td>
-      <td style="font-size:12px;color:var(--gray600)">${desc}</td>
-      <td class="amount-cell">₹${Number(doc.grand||0).toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
-      <td style="font-size:12px;color:var(--navy);font-weight:600">₹${running.toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
+      <td style="font-size:12px;color:var(--gray600)">${doc.againstProforma || '—'}</td>
+      <td style="font-size:12px;${fadedStyle}">${fmt(taxable)}</td>
+      <td style="font-size:12px;${fadedStyle}">${fmt(tax)}</td>
+      <td class="amount-cell" style="${fadedStyle}">${fmt(total)}${!isTaxInvoice ? ' <span style="font-size:9px">(not billed)</span>' : ''}</td>
+      <td style="font-size:12px;color:var(--gray400)">—</td>
+      <td style="font-size:12px;font-weight:600;color:${runningBalance>=0?'var(--red)':'var(--green)'}">${fmt(Math.abs(runningBalance))} ${runningBalance>=0?'Dr':'Cr'}</td>
     </tr>`;
   }).join('');
-  document.getElementById('ledger-total-amt').textContent = '₹' + running.toLocaleString('en-IN', {minimumFractionDigits:2});
+
+  document.getElementById('ledger-total-taxable').textContent = fmt(totalTaxable);
+  document.getElementById('ledger-total-tax').textContent = fmt(totalTax);
+  document.getElementById('ledger-total-amt').textContent = fmt(totalAmount);
+  document.getElementById('ledger-total-received').textContent = fmt(totalReceived);
+  document.getElementById('ledger-total-balance').textContent = fmt(totalAmount - totalReceived);
 }
 
 function renderSummary() {
@@ -2518,7 +2780,12 @@ function renderExpenseReport() {
   document.getElementById('rpt-exp-total').textContent = '₹' + total.toLocaleString('en-IN',{minimumFractionDigits:2});
 }
 
-function printReport() { window.print(); }
+function printReport() {
+  document.querySelectorAll('.report-panel').forEach(p => p.classList.remove('print-active'));
+  const activePanel = document.getElementById('report-' + currentReportTab);
+  if (activePanel) activePanel.classList.add('print-active');
+  window.print();
+}
 
 function renderPnL() {
   const from = document.getElementById('pnl-from')?.value || '';
@@ -2571,17 +2838,8 @@ function downloadCSV(filename, headers, rows) {
 
 function exportCurrentReportCSV() {
   if (currentReportTab === 'ledger') {
-    const custFilter = document.getElementById('ledger-customer')?.value || '';
-    const fromDate = document.getElementById('ledger-from')?.value || '';
-    const toDate = document.getElementById('ledger-to')?.value || '';
-    let filtered = [...documents];
-    if (custFilter) filtered = filtered.filter(d => d.clientName === custFilter);
-    if (fromDate) filtered = filtered.filter(d => (d.date || '') >= fromDate);
-    if (toDate) filtered = filtered.filter(d => (d.date || '') <= toDate);
-    filtered.sort((a,b) => (a.date||'') < (b.date||'') ? -1 : 1);
-    let running = 0;
-    const rows = filtered.map(doc => { running += doc.grand||0; return [doc.date||'', doc.number||'', doc.type, doc.clientName||'', (doc.items||[]).map(i=>i.desc).join('; '), (doc.grand||0).toFixed(2), running.toFixed(2)]; });
-    downloadCSV('customer_ledger.csv', ['Date','Doc No.','Type','Customer','Description','Amount','Running Total'], rows);
+    const rows = Array.from(document.querySelectorAll('#ledger-tbody tr')).map(tr => Array.from(tr.children).map(td => td.textContent.trim()));
+    downloadCSV('customer_ledger.csv', ['Date','Doc/Ref No.','Type','Customer','Against Proforma','Taxable Value','Tax','Total Amount','Payment Received','Balance'], rows);
   } else if (currentReportTab === 'summary') {
     const rows = Array.from(document.querySelectorAll('#summary-tbody tr')).map(tr => Array.from(tr.children).map(td => td.textContent));
     downloadCSV('monthly_summary.csv', ['Month','Tax Invoices','Proforma','Quotations','Total Billed'], rows);
