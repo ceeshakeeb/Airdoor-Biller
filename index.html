@@ -733,29 +733,6 @@
       </div>
 
       <div class="settings-card">
-        <h3>📄 Invoice Letterhead Template</h3>
-        <div style="margin-bottom:16px;font-size:13px;color:var(--gray600)">Choose how your invoice header and footer look. Affects PDF, preview and print.</div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px" id="template-picker">
-          <div class="template-option" data-template="classic" onclick="selectTemplate('classic')" style="border:2px solid var(--blue);border-radius:10px;padding:14px;cursor:pointer;text-align:center">
-            <div style="height:50px;background:linear-gradient(135deg,transparent 40%,var(--cello) 40%);border-radius:6px;margin-bottom:8px"></div>
-            <div style="font-size:12px;font-weight:700;color:var(--navy)">Classic</div>
-            <div style="font-size:10px;color:var(--gray400)">Slanted banner</div>
-          </div>
-          <div class="template-option" data-template="modern" onclick="selectTemplate('modern')" style="border:2px solid var(--gray200);border-radius:10px;padding:14px;cursor:pointer;text-align:center">
-            <div style="height:50px;display:flex;border-radius:6px;overflow:hidden;margin-bottom:8px"><div style="flex:1;background:var(--gray100)"></div><div style="flex:1;background:var(--cello)"></div></div>
-            <div style="font-size:12px;font-weight:700;color:var(--navy)">Modern</div>
-            <div style="font-size:10px;color:var(--gray400)">Full color bar</div>
-          </div>
-          <div class="template-option" data-template="minimal" onclick="selectTemplate('minimal')" style="border:2px solid var(--gray200);border-radius:10px;padding:14px;cursor:pointer;text-align:center">
-            <div style="height:50px;border-bottom:3px solid var(--cello);border-radius:6px;margin-bottom:8px"></div>
-            <div style="font-size:12px;font-weight:700;color:var(--navy)">Minimal</div>
-            <div style="font-size:10px;color:var(--gray400)">Underline only</div>
-          </div>
-        </div>
-        <input type="hidden" id="s-invoice-template" value="classic" />
-      </div>
-
-      <div class="settings-card">
         <h3>🖼️ Company Logo</h3>
         <div style="display:flex;align-items:flex-start;gap:28px;flex-wrap:wrap">
           <!-- Preview box -->
@@ -775,21 +752,6 @@
               <button class="btn btn-outline" onclick="removeLogo()">🗑 Remove Logo</button>
             </div>
             <div style="margin-top:12px;font-size:12px;color:var(--gray600)">💡 Tip: A transparent background logo works best. File will be encoded as Base64.</div>
-            <div class="form-group" style="margin-top:16px">
-              <label>"MEP Solutions" Tagline Position <span style="font-size:10px;color:var(--gray400);text-transform:none;font-weight:400">(nudge so it lines up under the "a" in your logo)</span></label>
-              <div style="display:flex;align-items:center;gap:12px">
-                <input type="range" id="s-logo-tagline-offset" min="0" max="120" value="38" oninput="document.getElementById('tagline-offset-val').textContent = this.value + 'px'; previewTaglineOffset(this.value)" style="flex:1" />
-                <span id="tagline-offset-val" style="font-size:12px;font-weight:700;color:var(--navy);min-width:42px">38px</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div style="margin-top:16px;border-top:1px solid var(--gray200);padding-top:16px">
-          <div style="font-size:12px;color:var(--gray600);margin-bottom:8px;font-weight:600">Live Preview</div>
-          <div style="display:flex;flex-direction:column;gap:2px;background:#fafcff;border:1px solid var(--gray200);border-radius:8px;padding:14px;width:fit-content">
-            <img id="tagline-preview-logo" src="" alt="" style="max-height:50px;max-width:240px;object-fit:contain;display:none" />
-            <div id="tagline-preview-placeholder" style="font-size:25px;font-weight:800;color:var(--cello);letter-spacing:1px;line-height:1">airdoor</div>
-            <div id="tagline-preview-text" style="font-size:9px;color:#4A7FA7;letter-spacing:2px;font-weight:700;text-transform:uppercase;white-space:nowrap;margin-left:38px">MEP Solutions</div>
           </div>
         </div>
       </div>
@@ -1398,9 +1360,7 @@ let settings = {
   quotPrefix: 'ADM/QUT/25-26/',
   taxNext: 1,
   proNext: 1,
-  quotNext: 1,
-  invoiceTemplate: 'classic',
-  logoTaglineOffset: 38
+  quotNext: 1
 };
 
 let currentDocType = 'Tax Invoice';
@@ -1827,25 +1787,6 @@ function collectFormData() {
 // HTML INVOICE GENERATION (Strict White / San Marino & Porcelain Accents)
 // ═══════════════════════════════════════════════════════
 function generateInvoiceHTML(doc) {
-  let _measureCanvas;
-  function getTextWidth(text, font) {
-    if (!_measureCanvas) _measureCanvas = document.createElement('canvas');
-    const ctx = _measureCanvas.getContext('2d');
-    ctx.font = font;
-    return ctx.measureText(text).width;
-  }
-  function matchedTagline(wordmarkText, wordmarkFontPx, taglineText) {
-    const wordmarkFont = `800 ${wordmarkFontPx}px 'DM Sans', sans-serif`;
-    const wordmarkWidth = getTextWidth(wordmarkText, wordmarkFont);
-    const taglineUpper = taglineText.toUpperCase();
-    const baseFont = `600 9px 'DM Sans', sans-serif`;
-    const baseWidth = getTextWidth(taglineUpper, baseFont);
-    const n = taglineUpper.length;
-    const spacing = n > 1 ? Math.max(0.5, (wordmarkWidth - baseWidth) / (n - 1)) : 0;
-    return spacing.toFixed(2) + 'px';
-  }
-  const taglineSpacingLg = matchedTagline('airdoor', 29, 'MEP Solutions');
-  const taglineSpacingSm = matchedTagline('airdoor', 25, 'MEP Solutions');
   const s = doc.settings || settings;
   const fmt = n => '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2 });
   const dateStr = doc.date ? new Date(doc.date).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : '';
@@ -1885,13 +1826,17 @@ function generateInvoiceHTML(doc) {
       <div style="font-size:11px;color:#475569;line-height:1.8;white-space:pre-line">${doc.notes}</div>
     </div>` : '';
 
-  // Letterhead template: classic (slant banner) | modern (full bar) | minimal (underline only)
-  // Quotation always uses minimal (underline only), fixed — ignores settings template choice
-  const template = doc.type === 'Quotation' ? 'minimal' : (s.invoiceTemplate || 'classic');
+  // Letterhead is fixed per document type — no longer user-selectable in Settings:
+  //   Tax Invoice -> classic (slanted banner)
+  //   Quotation   -> minimal (underline only)
+  //   Proforma    -> proforma (outlined accent card)
+  const template = doc.type === 'Quotation' ? 'minimal' : doc.type === 'Proforma Invoice' ? 'proforma' : 'classic';
   let headerBannerHTML;
-  if (template === 'modern') {
-    headerBannerHTML = `<div style="background:${PRIMARY};color:${ACCENT};padding:14px 32px;display:flex;align-items:center;justify-content:flex-end;flex:1;border-radius:0 0 0 24px">
-          <div style="font-size:22px;font-weight:800;letter-spacing:4px">${docLabel}</div>
+  if (template === 'proforma') {
+    headerBannerHTML = `<div style="display:flex;align-items:center;padding:14px 32px">
+          <div style="background:${LIGHT_BLUE};border-left:5px solid ${PRIMARY};border-radius:6px;padding:10px 22px">
+            <div style="font-size:20px;font-weight:800;letter-spacing:3px;color:${PRIMARY}">${docLabel}</div>
+          </div>
         </div>`;
   } else if (template === 'minimal') {
     headerBannerHTML = `<div style="display:flex;align-items:center;padding:14px 24px 8px 24px">
@@ -1904,6 +1849,8 @@ function generateInvoiceHTML(doc) {
   }
   const footerBarHTML = template === 'minimal'
     ? `<div style="border-top:2px solid ${PRIMARY};color:${PRIMARY};text-align:center;padding:9px;font-size:13px;font-weight:600;flex-shrink:0">Thank you for your business!</div>`
+    : template === 'proforma'
+    ? `<div style="background:${LIGHT_BLUE};color:${PRIMARY};border-top:3px solid ${PRIMARY};text-align:center;padding:9px;font-size:13px;font-weight:700;flex-shrink:0">Thank you for your business!</div>`
     : `<div style="background:${PRIMARY};color:${ACCENT};text-align:center;padding:9px;font-size:13px;font-weight:600;flex-shrink:0;clip-path:polygon(0 0,100% 12%,100% 100%,0 100%)">Thank you for your business!</div>`;
 
   return `
@@ -1912,7 +1859,7 @@ function generateInvoiceHTML(doc) {
       <!-- HEADER ROW: Logo + Doc Type Label -->
       <div style="display:flex;justify-content:space-between;align-items:stretch;position:relative;flex-shrink:0">
         <div style="padding:14px 24px 8px 24px;display:flex;align-items:center;gap:14px">
-          ${s.logoDataUrl ? `<div style="display:flex;flex-direction:column;align-items:center;gap:2px"><img src="${s.logoDataUrl}" alt="Logo" style="max-height:59px;max-width:281px;object-fit:contain;display:block" /><div style="font-size:9px;color:#4A7FA7;letter-spacing:2px;font-weight:700;text-transform:uppercase;white-space:nowrap;text-align:center">MEP Solutions</div></div>` : `<div style="width:44px;height:44px;background:${PRIMARY};border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:700;color:${ACCENT}">A</div><div style="display:flex;flex-direction:column;align-items:center;gap:1px"><div style="font-size:29px;font-weight:800;color:${PRIMARY};letter-spacing:1px;line-height:1">airdoor</div><div style="font-size:9px;color:#4A7FA7;letter-spacing:${taglineSpacingLg};font-weight:600;text-transform:uppercase;white-space:nowrap">MEP Solutions</div></div>`}
+          ${s.logoDataUrl ? `<img src="${s.logoDataUrl}" alt="Logo" style="max-height:59px;max-width:281px;object-fit:contain;display:block" />` : `<div style="width:44px;height:44px;background:${PRIMARY};border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:700;color:${ACCENT}">A</div><div style="font-size:29px;font-weight:800;color:${PRIMARY};letter-spacing:1px;line-height:1">airdoor</div>`}
         </div>
         ${headerBannerHTML}
       </div>
@@ -2350,9 +2297,6 @@ function loadSettings() {
     if (topbarLogoImg) topbarLogoImg.style.display = 'none';
     if (topbarLogoPlate) topbarLogoPlate.style.display = 'none';
   }
-  document.getElementById('s-logo-tagline-offset').value = settings.logoTaglineOffset != null ? settings.logoTaglineOffset : 38;
-  document.getElementById('tagline-offset-val').textContent = (settings.logoTaglineOffset != null ? settings.logoTaglineOffset : 38) + 'px';
-  previewTaglineOffset(settings.logoTaglineOffset != null ? settings.logoTaglineOffset : 38);
   document.getElementById('s-company').value = settings.company || '';
   document.getElementById('s-gst').value = settings.gst || '';
   document.getElementById('s-address').value = settings.address || '';
@@ -2370,18 +2314,8 @@ function loadSettings() {
   document.getElementById('s-tax-next').value = settings.taxNext || 1;
   document.getElementById('s-pro-next').value = settings.proNext || 1;
   document.getElementById('s-quot-next').value = settings.quotNext || 1;
-  document.getElementById('s-invoice-template').value = settings.invoiceTemplate || 'classic';
-  selectTemplate(settings.invoiceTemplate || 'classic', false);
   
   updateMainHeader();
-}
-
-function selectTemplate(name, persist = true) {
-  document.getElementById('s-invoice-template').value = name;
-  document.querySelectorAll('.template-option').forEach(el => {
-    el.style.borderColor = el.getAttribute('data-template') === name ? 'var(--blue)' : 'var(--gray200)';
-  });
-  if (persist) SETTINGS_REF.set({ invoiceTemplate: name }, { merge: true }).then(() => toast('Letterhead template updated! ✓', 'success'));
 }
 
 let pendingServiceReport = null; // { url, name } for current new/edit document
@@ -2439,25 +2373,9 @@ function saveSettings() {
     branch: document.getElementById('s-branch').value, ifsc: document.getElementById('s-ifsc').value, paymentTerms: document.getElementById('s-payment-terms').value,
     taxPrefix: document.getElementById('s-tax-prefix').value,
     proPrefix: document.getElementById('s-pro-prefix').value, quotPrefix: document.getElementById('s-quot-prefix').value,
-    taxNext: parseInt(document.getElementById('s-tax-next').value) || 1, proNext: parseInt(document.getElementById('s-pro-next').value) || 1, quotNext: parseInt(document.getElementById('s-quot-next').value) || 1,
-    invoiceTemplate: document.getElementById('s-invoice-template').value || 'classic',
-    logoTaglineOffset: parseInt(document.getElementById('s-logo-tagline-offset').value) || 0
+    taxNext: parseInt(document.getElementById('s-tax-next').value) || 1, proNext: parseInt(document.getElementById('s-pro-next').value) || 1, quotNext: parseInt(document.getElementById('s-quot-next').value) || 1
   };
   SETTINGS_REF.set(updated, { merge: true }).then(() => { updateBankPreview(); toast('Settings saved! ✓', 'success'); }).catch(err => toast('Save failed', 'error'));
-}
-
-function previewTaglineOffset(val) {
-  const taglineEl = document.getElementById('tagline-preview-text');
-  const logoEl = document.getElementById('tagline-preview-logo');
-  const placeholderEl = document.getElementById('tagline-preview-placeholder');
-  if (taglineEl) taglineEl.style.marginLeft = val + 'px';
-  if (settings.logoDataUrl) {
-    if (logoEl) { logoEl.src = settings.logoDataUrl; logoEl.style.display = 'block'; }
-    if (placeholderEl) placeholderEl.style.display = 'none';
-  } else {
-    if (logoEl) logoEl.style.display = 'none';
-    if (placeholderEl) placeholderEl.style.display = 'block';
-  }
 }
 
 function resetForm() {
